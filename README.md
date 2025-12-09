@@ -1,8 +1,8 @@
-# 💑 Miroma - App para Parejas
+# Miroma - App para finanza en Parejas
 
 Aplicación web moderna para parejas que organiza finanzas, pendientes, planes y metas futuras con privacidad total y sistema automático 70/30.
 
-## ✨ Características
+## Características
 
 - **Sistema 70/30 automático:** Divide gastos según ingresos sin revelar cuánto gana cada uno
 - **Gastos compartidos:** Con cálculo automático de aportes individuales
@@ -14,7 +14,7 @@ Aplicación web moderna para parejas que organiza finanzas, pendientes, planes y
 - **Diseño moderno:** Interfaz limpia con gradientes y animaciones suaves
 - **Responsive:** Funciona en móvil, tablet y desktop
 
-## 🚀 Instalación Rápida
+## Instalación Rápida
 
 ```bash
 # 1. Clonar repositorio
@@ -37,7 +37,7 @@ python run.py
 
 Abrir navegador en: **http://localhost:8080**
 
-## 👥 Usuarios de Prueba
+## Usuarios de Prueba
 
 ```
 Usuario 1 (Esposa):
@@ -51,7 +51,7 @@ Password: password123
 Ingreso: $1,000,000 (privado)
 ```
 
-## 💰 Sistema 70/30
+##  Sistema 70/30
 
 El sistema calcula automáticamente cuánto debe aportar cada persona según sus ingresos, **manteniendo total privacidad**.
 
@@ -70,7 +70,7 @@ El sistema calcula automáticamente cuánto debe aportar cada persona según sus
 
 **Ninguno ve el ingreso del otro.**
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 MiRoma/
@@ -93,7 +93,7 @@ MiRoma/
 └── requirements.txt    # Dependencias
 ```
 
-## 🎨 Diseño
+## Diseño
 
 ### Colores Principales
 - **Rosa (Esposa):** `#f472b6` → `#ec4899`
@@ -110,7 +110,7 @@ MiRoma/
 - Animaciones de hover suaves
 - Diseño responsive mobile-first
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 **Backend:**
 - Python 3.8+
@@ -130,16 +130,16 @@ MiRoma/
 - SQLite (desarrollo)
 - PostgreSQL (producción)
 
-## 🔒 Seguridad
+## Seguridad
 
-- ✅ Contraseñas hasheadas con bcrypt
-- ✅ Autenticación JWT
-- ✅ Ingresos privados
-- ✅ Validación de permisos
-- ✅ Protección SQL injection
-- ✅ CORS configurado
+- Contraseñas hasheadas con bcrypt
+- Autenticación JWT
+- Ingresos privados
+- Validación de permisos
+- Protección SQL injection
+- CORS configurado
 
-## 📡 API REST
+## API REST
 
 Base URL: `http://localhost:8080`
 
@@ -196,7 +196,7 @@ FLASK_ENV=development
 FLASK_DEBUG=True
 ```
 
-## 🐛 Solución de Problemas
+## Solución de Problemas
 
 ### Error: "No module named 'flask'"
 ```bash
@@ -215,7 +215,7 @@ rm instance/miroma.db
 python test_app.py
 ```
 
-## 📚 Documentación
+## Documentación
 
 Ver `docs/README.md` para documentación completa:
 - Arquitectura del sistema
@@ -224,9 +224,9 @@ Ver `docs/README.md` para documentación completa:
 - Guía de desarrollo
 - Roadmap
 
-## 🗺️ Roadmap
+## Roadmap
 
-### ✅ Fase 1: MVP (Completado)
+### Fase 1: MVP (Completado)
 - Sistema de autenticación
 - Vinculación de parejas
 - Gastos compartidos con 70/30
@@ -236,7 +236,7 @@ Ver `docs/README.md` para documentación completa:
 - Planes a futuro
 - Diseño moderno
 
-### 🚧 Fase 2: Mejoras
+### Fase 2: Mejoras
 - [ ] Notificaciones en tiempo real
 - [ ] Gráficos y estadísticas
 - [ ] Exportar reportes PDF
@@ -249,23 +249,10 @@ Ver `docs/README.md` para documentación completa:
 - [ ] Chat entre pareja
 - [ ] Calendario compartido
 
-## 🤝 Contribuir
 
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
 
-## 📄 Licencia
 
-MIT License
+## Autor
 
-## 👨‍💻 Autor
+Alejajimfo
 
-Desarrollado con ❤️ para parejas que quieren organizar su vida juntos.
-
----
-
-**¿Preguntas?** Abre un issue en el repositorio.
