@@ -23,14 +23,19 @@ git branch -M main
 git push -u origin main
 ```
 
-### 2. Despliega en Railway (3 min)
-1. Ve a: https://railway.app
+### 2. Despliega en Render (3 min) - Railway está caído
+1. Ve a: https://render.com
 2. Regístrate con tu GitHub
-3. Click "New Project" → "Deploy from GitHub repo"
-4. Selecciona "miroma-app"
-5. Espera que termine de desplegar
-6. Click "Settings" → "Generate Domain"
-7. **COPIA TU URL** (algo como: `miroma-app.up.railway.app`)
+3. Click "New +" → "Web Service"
+4. Conecta tu repo "miroma-app"
+5. Configuración:
+   - Name: miroma-app
+   - Environment: Python 3
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `python run.py`
+6. Click "Create Web Service"
+7. Espera 3-5 minutos
+8. **COPIA TU URL** (algo como: `miroma-app.onrender.com`)
 
 ### 3. Crea APK (5 min)
 1. Ve a: https://appsgeyser.com
