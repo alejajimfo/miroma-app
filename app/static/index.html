@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miroma - App para Parejas</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Gestiona tus finanzas en pareja de forma inteligente y transparente">
+    <meta name="theme-color" content="#FF69B4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Miroma">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Pantalla de Bienvenida / Selección de Rol -->
+    <div id="welcome-screen">
+        <div class="container">
+            <div class="logo-circle">💜</div>
+            <h1 style="text-align: center; color: #9C27B0; margin-bottom: 0.5rem;">Juntos ✨</h1>
+            <p style="text-align: center; color: #666; margin-bottom: 3rem;">Gestiona tus finanzas en pareja de forma inteligente y transparente</p>
+            
+            <div class="card" style="max-width: 500px; margin: 0 auto;">
+                <h2 style="text-align: center; margin-bottom: 2rem; font-size: 1.25rem;">¿Cómo quieres usar la app?</h2>
+                
+                <button onclick="seleccionarRol('esposa')" class="btn btn-primary" style="margin-bottom: 1rem;">
+                    💗 Soy esposa
+                </button>
+                
+                <button onclick="seleccionarRol('esposo')" class="btn btn-secondary">
+                    💙 Soy esposo
+                </button>
+                
+                <div style="margin-top: 2rem; text-align: center; color: #999; font-size: 0.875rem;">
+                    <p>✨ Sistema automático 70/30</p>
+                    <p>🔒 Tu ingreso es privado</p>
+                    <p>💚 Gastos compartidos transparentes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Login -->
+    <div id="login-screen" class="hidden">
+        <div class="container">
+            <div class="logo-circle" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);">
+                💗
+            </div>
+            <h1 style="text-align: center; margin-bottom: 0.5rem;">Bienvenida de vuelta</h1>
+            <p style="text-align: center; color: #666; margin-bottom: 3rem;">Inicia sesión para continuar</p>
+            
+            <div class="card" style="max-width: 500px; margin: 0 auto;">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" id="login-email" placeholder="tu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="login-password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                </form>
+                
+                <p style="text-align: center; margin-top: 1.5rem; color: #666;">
+                    ¿No tienes cuenta? <a href="#" onclick="mostrarRegistro()" style="color: #FF69B4; font-weight: 600;">Regístrate</a>
+                </p>
+            </div>
+            
+            <button onclick="volverABienvenida()" class="btn btn-ghost" style="max-width: 500px; margin: 2rem auto 0; display: flex;">
+                ← Volver
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Registro -->
+    <div id="register-screen" class="hidden">
+        <div class="container">
+            <div class="logo-circle" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);">
+                💗
+            </div>
+            <h1 style="text-align: center; margin-bottom: 0.5rem;">Crear cuenta</h1>
+            <p style="text-align: center; color: #666; margin-bottom: 3rem;">Completa tus datos para comenzar</p>
+            
+            <div class="card" style="max-width: 500px; margin: 0 auto;">
+                <form id="registro-form">
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" id="reg-email" placeholder="tu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="reg-password" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apodo</label>
+                        <input type="text" id="reg-apodo" placeholder="¿Cómo te llamas?" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingreso Mensual (privado 🔒)</label>
+                        <input type="number" id="reg-ingreso" placeholder="1000000" min="0" step="100000" required>
+                        <small style="color: #999; font-size: 0.875rem;">Solo tú lo verás, se usa para calcular aportes</small>
+                    </div>
+                    <input type="hidden" id="reg-rol" value="">
+                    <button type="submit" class="btn btn-primary">Registrarse</button>
+                </form>
+                
+                <p style="text-align: center; margin-top: 1.5rem; color: #666;">
+                    ¿Ya tienes cuenta? <a href="#" onclick="mostrarLogin()" style="color: #FF69B4; font-weight: 600;">Inicia sesión</a>
+                </p>
+            </div>
+            
+            <button onclick="volverABienvenida()" class="btn btn-ghost" style="max-width: 500px; margin: 2rem auto 0; display: flex;">
+                ← Volver
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla Principal / Dashboard -->
+    <div id="main-screen" class="hidden">
+        <div class="container">
+            <!-- User Header -->
+            <div class="user-header-card" id="user-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="user-avatar">💑</div>
+                    <div>
+                        <p style="opacity: 0.9; font-size: 0.875rem;">Hola,</p>
+                        <h2 id="bienvenida" style="margin: 0; font-size: 1.5rem;">María</h2>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="btn-ghost" style="width: auto;">
+                    🚪
+                </button>
+            </div>
+
+            <!-- Vinculación -->
+            <div id="vinculacion-section" class="hidden">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <h2 class="card-title" style="text-align: center;">Vincular con tu Pareja</h2>
+                    <div class="grid">
+                        <div>
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Generar Código</h3>
+                            <button id="btn-generar-codigo" class="btn btn-primary">Generar Código</button>
+                            <p id="codigo-generado" class="mt-20" style="text-align: center; font-size: 1.5rem; font-weight: 700; color: #FF69B4;"></p>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Ingresar Código</h3>
+                            <input type="text" id="input-codigo" placeholder="Código de 6 dígitos" maxlength="6" style="margin-bottom: 1rem;">
+                            <button id="btn-vincular" class="btn btn-secondary">Vincular</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menú Principal -->
+            <div id="menu-principal" class="hidden">
+                <!-- Menu Cards -->
+                <div class="plans-grid">
+                    <div class="menu-card" onclick="mostrarSeccion('gastos-compartidos')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #00C853 0%, #00E676 100%);">
+                            📊
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #00C853;">Nuestros gastos</div>
+                            <div class="menu-card-description">Sistema 70/30 automático</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-card" onclick="mostrarSeccion('gastos-personales')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);">
+                            💰
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #FF69B4;">Gastos personales</div>
+                            <div class="menu-card-description">Tu presupuesto privado</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-card" onclick="mostrarSeccion('ahorros')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #FF9800 0%, #FFB300 100%);">
+                            🐷
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #FF9800;">Ahorros</div>
+                            <div class="menu-card-description">Metas conjuntas</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-card" onclick="mostrarSeccion('pendientes')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%);">
+                            ✓
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #9C27B0;">Pendientes</div>
+                            <div class="menu-card-description">Lista de tareas juntos</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-card" onclick="mostrarSeccion('planes')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #5E72E4 0%, #825EE4 100%);">
+                            🚀
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #5E72E4;">Planes a futuro</div>
+                            <div class="menu-card-description">Proyectos y sueños</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-card" onclick="mostrarSeccion('configuracion')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #78909C 0%, #90A4AE 100%);">
+                            ⚙️
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #78909C;">Configuración</div>
+                            <div class="menu-card-description">Ajustes de cuenta</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        💜 Resumen rápido
+                    </h3>
+                    <div class="quick-stats">
+                        <div class="stat-card green">
+                            <p class="stat-label" style="color: #00C853;">Gastos este mes</p>
+                            <p class="stat-value" style="color: #00C853;">$1,250,000</p>
+                        </div>
+                        <div class="stat-card amber">
+                            <p class="stat-label" style="color: #FF9800;">Ahorros acumulados</p>
+                            <p class="stat-value" style="color: #FF9800;">$3,500,000</p>
+                        </div>
+                        <div class="stat-card purple">
+                            <p class="stat-label" style="color: #9C27B0;">Pendientes activos</p>
+                            <p class="stat-value" style="color: #9C27B0;">5 tareas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secciones (Gastos, Ahorros, etc.) -->
+            <div id="seccion-gastos-compartidos" class="hidden">
+                <div class="section-header">
+                    <button onclick="mostrarSeccion('menu')" class="btn-back">← </button>
+                    <div>
+                        <h2 style="color: #00C853; margin-bottom: 0.25rem;">Nuestros gastos</h2>
+                        <p style="color: #666; font-size: 0.875rem;">Sistema 70/30 automático</p>
+                    </div>
+                    <button onclick="mostrarModal('modal-crear-gasto')" class="btn-add">+ Agregar gasto</button>
+                </div>
+                
+                <!-- Semáforo Financiero -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        📊 Semáforo financiero
+                        <span id="semaforo-estado" class="badge badge-green">En buen estado</span>
+                    </h3>
+                    <div id="semaforo-barra" class="progress-bar-large">
+                        <div class="progress-fill-large" style="width: 42.5%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.875rem;">
+                        <span style="color: #666;"><span id="semaforo-gastado">$850,000</span> gastados</span>
+                        <span style="color: #666;"><span id="semaforo-presupuesto">$2,000,000</span> presupuesto</span>
+                    </div>
+                </div>
+                
+                <!-- Tu Resumen -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">📈 Tu resumen</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item" style="background: #E8F5E9;">
+                            <p class="summary-label">Tu aporte total</p>
+                            <p class="summary-value" style="color: #00C853;" id="resumen-aporte">$566,666</p>
+                        </div>
+                        <div class="summary-item" style="background: #E3F2FD;">
+                            <p class="summary-label">Porcentaje</p>
+                            <p class="summary-value" style="color: #2196F3;" id="resumen-porcentaje">67%</p>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <span style="font-size: 1.25rem;">ℹ️</span>
+                        <p style="margin: 0; font-size: 0.875rem;">Tu aporte se calcula automáticamente según tu ingreso privado. Tu pareja no puede ver tu ingreso.</p>
+                    </div>
+                </div>
+                
+                <!-- Historial de Gastos -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Historial de gastos</h3>
+                    <div id="lista-gastos-compartidos"></div>
+                </div>
+            </div>
+
+            <div id="seccion-gastos-personales" class="hidden">
+                <div class="section-header">
+                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <div>
+                        <h2 style="color: #FF69B4; margin-bottom: 0.25rem;">Gastos personales</h2>
+                        <p style="color: #666; font-size: 0.875rem;">Solo tú puedes ver esto 🔒</p>
+                    </div>
+                    <button onclick="mostrarModal('modal-crear-gasto-personal')" class="btn-add">+ Agregar</button>
+                </div>
+                
+                <!-- Tu Presupuesto Personal -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Tu presupuesto personal</h3>
+                    <div class="progress-bar-large">
+                        <div class="progress-fill-large" id="presupuesto-personal-fill" style="width: 36%; background: linear-gradient(90deg, #FF69B4 0%, #FF1493 100%);"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.875rem;">
+                        <span style="color: #666;"><span id="presupuesto-gastado">$180,000</span> gastados</span>
+                        <span style="color: #666;"><span id="presupuesto-total">$500,000</span> presupuesto</span>
+                    </div>
+                    
+                    <div class="summary-item" style="background: #FCE4EC; margin-top: 1.5rem;">
+                        <p class="summary-label">Disponible</p>
+                        <p class="summary-value" style="color: #FF69B4;" id="presupuesto-disponible">$320,000</p>
+                    </div>
+                </div>
+                
+                <!-- Tus Gastos -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Tus gastos</h3>
+                    <div id="lista-gastos-personales"></div>
+                </div>
+            </div>
+
+            <div id="seccion-ahorros" class="hidden">
+                <div class="section-header">
+                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <div>
+                        <h2 style="color: #FF9800; margin-bottom: 0.25rem;">Ahorros</h2>
+                        <p style="color: #666; font-size: 0.875rem;">Metas conjuntas para el futuro</p>
+                    </div>
+                    <button onclick="mostrarModal('modal-crear-ahorro')" class="btn-add">+ Nueva meta</button>
+                </div>
+                
+                <!-- Total Ahorrado -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        📈 Total ahorrado
+                    </h3>
+                    <p style="font-size: 2rem; font-weight: 700; color: #FF9800; margin: 0;" id="total-ahorrado">$15,500,000</p>
+                    <p style="color: #999; font-size: 0.875rem; margin-top: 0.5rem;">Entre todas las metas</p>
+                </div>
+                
+                <!-- Metas de Ahorro -->
+                <div id="lista-ahorros"></div>
+            </div>
+
+            <div id="seccion-pendientes" class="hidden">
+                <div class="section-header">
+                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <div>
+                        <h2 style="color: #9C27B0; margin-bottom: 0.25rem;">Pendientes</h2>
+                        <p style="color: #666; font-size: 0.875rem;">Para nuestra vida juntos ❤️</p>
+                    </div>
+                    <button onclick="mostrarModal('modal-crear-pendiente')" class="btn-add">+ Agregar</button>
+                </div>
+                
+                <!-- Resumen -->
+                <div class="summary-grid">
+                    <div class="card">
+                        <p style="color: #999; font-size: 0.875rem; margin-bottom: 0.5rem;">Pendientes</p>
+                        <p style="font-size: 2rem; font-weight: 700; color: #9C27B0; margin: 0;" id="count-pendientes">3</p>
+                    </div>
+                    <div class="card">
+                        <p style="color: #999; font-size: 0.875rem; margin-bottom: 0.5rem;">Completadas</p>
+                        <p style="font-size: 2rem; font-weight: 700; color: #00C853; margin: 0;" id="count-completadas">2</p>
+                    </div>
+                </div>
+                
+                <!-- Por Hacer -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Por hacer</h3>
+                    <div id="lista-pendientes-activos"></div>
+                </div>
+                
+                <!-- Completadas -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Completadas</h3>
+                    <div id="lista-pendientes-completados"></div>
+                </div>
+            </div>
+
+            <div id="seccion-planes" class="hidden">
+                <div class="section-header">
+                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <div>
+                        <h2 style="color: #5E72E4; margin-bottom: 0.25rem;">Planes a futuro</h2>
+                        <p style="color: #666; font-size: 0.875rem;">Proyectos y sueños juntos 🚀</p>
+                    </div>
+                    <button onclick="mostrarModal('modal-crear-plan')" class="btn-add" style="background: linear-gradient(135deg, #5E72E4 0%, #825EE4 100%);">+ Nuevo plan</button>
+                </div>
+                
+                <div id="lista-planes" class="plans-grid"></div>
+            </div>
+            
+            <div id="seccion-plan-detalle" class="hidden">
+                <div id="plan-detalle-content"></div>
+            </div>
+
+            <!-- Sección Configuración -->
+            <div id="seccion-configuracion" class="hidden">
+                <button onclick="mostrarSeccion('menu')" class="btn btn-ghost" style="width: auto; margin-bottom: 1.5rem;">
+                    ← Volver
+                </button>
+                
+                <h2 style="color: #78909C; margin-bottom: 0.5rem;">Configuración</h2>
+                <p style="color: #666; margin-bottom: 2rem;">Ajustes de tu cuenta</p>
+                
+                <!-- Información de Perfil -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Información de perfil</h3>
+                    
+                    <!-- Foto de Perfil -->
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <div style="position: relative; display: inline-block;">
+                            <div id="preview-foto-perfil" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+                                💑
+                            </div>
+                            <label for="input-foto-perfil" style="position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 3px solid #f5f0f5;">
+                                📷
+                            </label>
+                            <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="previsualizarFoto(event)">
+                        </div>
+                        <p style="color: #999; font-size: 0.875rem; margin-top: 1rem;">Click en la cámara para cambiar foto</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Apodo</label>
+                        <input type="text" id="config-apodo" placeholder="Tu apodo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="config-email" placeholder="tu@email.com" disabled style="opacity: 0.6;">
+                        <small style="color: #999; font-size: 0.875rem;">El email no se puede cambiar</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Rol</label>
+                        <input type="text" id="config-rol" disabled style="opacity: 0.6;">
+                        <small style="color: #999; font-size: 0.875rem;">El rol no se puede cambiar</small>
+                    </div>
+                    
+                    <button onclick="actualizarPerfil()" class="btn btn-primary">
+                        Guardar cambios
+                    </button>
+                </div>
+                
+                <!-- Información Financiera -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Información financiera 🔒</h3>
+                    
+                    <div class="form-group">
+                        <label>Ingreso mensual (privado)</label>
+                        <input type="number" id="config-ingreso" placeholder="1000000" min="0" step="100000">
+                        <small style="color: #999; font-size: 0.875rem;">Solo tú puedes ver esta información. Se usa para calcular aportes en gastos compartidos.</small>
+                    </div>
+                    
+                    <button onclick="actualizarIngreso()" class="btn btn-primary">
+                        Actualizar ingreso
+                    </button>
+                </div>
+                
+                <!-- Información de Pareja -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Información de pareja</h3>
+                    
+                    <div id="info-pareja">
+                        <p style="color: #666;">Cargando información...</p>
+                    </div>
+                </div>
+                
+                <!-- Cambiar Contraseña -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Cambiar contraseña</h3>
+                    
+                    <div class="form-group">
+                        <label>Contraseña actual</label>
+                        <input type="password" id="config-password-actual" placeholder="••••••••">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nueva contraseña</label>
+                        <input type="password" id="config-password-nueva" placeholder="••••••••">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Confirmar nueva contraseña</label>
+                        <input type="password" id="config-password-confirmar" placeholder="••••••••">
+                    </div>
+                    
+                    <button onclick="cambiarPassword()" class="btn btn-primary">
+                        Cambiar contraseña
+                    </button>
+                </div>
+                
+                <!-- Zona de Peligro -->
+                <div class="card" style="border: 2px solid #FFEBEE;">
+                    <h3 style="margin-bottom: 1.5rem; color: #F44336;">Zona de peligro</h3>
+                    
+                    <p style="color: #666; margin-bottom: 1rem;">
+                        Si deseas desvincular tu cuenta de tu pareja, todos los datos compartidos se mantendrán pero ya no podrán ver la información del otro.
+                    </p>
+                    
+                    <button onclick="confirmarDesvinculacion()" class="btn" style="background: #FFEBEE; color: #F44336; font-weight: 600;">
+                        Desvincular pareja
+                    </button>
+                    
+                    <hr style="margin: 2rem 0; border: none; border-top: 1px solid #eee;">
+                    
+                    <p style="color: #666; margin-bottom: 1rem;">
+                        <strong>Eliminar cuenta:</strong> Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos.
+                    </p>
+                    
+                    <button onclick="confirmarEliminarCuenta()" class="btn" style="background: #F44336; color: white; font-weight: 600;">
+                        Eliminar mi cuenta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear Gasto -->
+    <div id="modal-crear-gasto" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Crear Gasto Compartido</h3>
+            <form id="form-crear-gasto">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="gasto-nombre" placeholder="Ej: Mercado" required>
+                </div>
+                <div class="form-group">
+                    <label>Monto Total</label>
+                    <input type="number" id="gasto-monto" placeholder="300000" min="0" step="1000" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="gasto-categoria" required>
+                        <option value="hogar">Hogar</option>
+                        <option value="comida">Comida</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="salud">Salud</option>
+                        <option value="entretenimiento">Entretenimiento</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear</button>
+                <button type="button" onclick="cerrarModal('modal-crear-gasto')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Plan -->
+    <div id="modal-crear-plan" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Crear nuevo plan</h3>
+            <form id="form-crear-plan" onsubmit="crearPlan(event)">
+                <div class="form-group">
+                    <label>Nombre del plan</label>
+                    <input type="text" id="plan-nombre" placeholder="Ej: Viaje a Europa" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de plan</label>
+                    <select id="plan-tipo" required>
+                        <option value="viaje">Viaje</option>
+                        <option value="vehiculo">Vehículo</option>
+                        <option value="hogar">Hogar</option>
+                        <option value="evento">Evento</option>
+                        <option value="personalizado">Personalizado</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear plan</button>
+                <button type="button" onclick="cerrarModal('modal-crear-plan')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Ahorro -->
+    <div id="modal-crear-ahorro" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Nueva meta de ahorro</h3>
+            <form id="form-crear-ahorro" onsubmit="crearAhorro(event)">
+                <div class="form-group">
+                    <label>Nombre de la meta</label>
+                    <input type="text" id="ahorro-nombre" placeholder="Ej: Viaje a Cartagena" required>
+                </div>
+                <div class="form-group">
+                    <label>Meta de ahorro</label>
+                    <input type="number" id="ahorro-meta" placeholder="5000000" min="0" step="100000" required>
+                </div>
+                <div class="form-group">
+                    <label>Fecha objetivo (opcional)</label>
+                    <input type="date" id="ahorro-fecha">
+                </div>
+                <button type="submit" class="btn btn-primary">Crear meta</button>
+                <button type="button" onclick="cerrarModal('modal-crear-ahorro')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Aporte -->
+    <div id="modal-agregar-aporte" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Agregar aporte</h3>
+            <form id="form-agregar-aporte" onsubmit="agregarAporte(event)">
+                <input type="hidden" id="aporte-ahorro-id">
+                <div class="form-group">
+                    <label>Monto del aporte</label>
+                    <input type="number" id="aporte-monto" placeholder="500000" min="0" step="10000" required>
+                </div>
+                <div class="form-group">
+                    <label>Notas (opcional)</label>
+                    <textarea id="aporte-notas" placeholder="Ej: Aporte del mes de diciembre" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar aporte</button>
+                <button type="button" onclick="cerrarModal('modal-agregar-aporte')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Pendiente -->
+    <div id="modal-crear-pendiente" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Nuevo pendiente</h3>
+            <form id="form-crear-pendiente" onsubmit="crearPendiente(event)">
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="pendiente-titulo" placeholder="Ej: Pagar arriendo" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="pendiente-categoria" required>
+                        <option value="hogar">Hogar</option>
+                        <option value="tramites">Trámites</option>
+                        <option value="eventos">Eventos</option>
+                        <option value="familia">Familia</option>
+                        <option value="salud">Salud</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de recordatorio (opcional)</label>
+                    <input type="date" id="pendiente-fecha">
+                </div>
+                <div class="form-group">
+                    <label>Notas (opcional)</label>
+                    <textarea id="pendiente-notas" placeholder="Notas adicionales" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear pendiente</button>
+                <button type="button" onclick="cerrarModal('modal-crear-pendiente')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Gasto Personal -->
+    <div id="modal-crear-gasto-personal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Nuevo gasto personal</h3>
+            <form id="form-crear-gasto-personal" onsubmit="crearGastoPersonal(event)">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="gasto-personal-nombre" placeholder="Ej: Café Starbucks" required>
+                </div>
+                <div class="form-group">
+                    <label>Monto</label>
+                    <input type="number" id="gasto-personal-monto" placeholder="15000" min="0" step="1000" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="gasto-personal-categoria" required>
+                        <option value="comida">Comida</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="entretenimiento">Entretenimiento</option>
+                        <option value="ropa">Ropa</option>
+                        <option value="salud">Salud</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear gasto</button>
+                <button type="button" onclick="cerrarModal('modal-crear-gasto-personal')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/planes.js"></script>
+    <script src="/static/js/gastos-ui.js"></script>
+    <script>
+        // Override functions to use new UI
+        window.cargarGastosCompartidos = cargarGastosCompartidosUI;
+        window.cargarGastosPersonales = cargarGastosPersonalesUI;
+        window.cargarAhorros = cargarAhorrosUI;
+        window.cargarPendientes = cargarPendientesUI;
+        
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(registration => console.log('SW registered:', registration))
+                    .catch(error => console.log('SW registration failed:', error));
+            });
+        }
+    </script>
+</body>
+</html>
