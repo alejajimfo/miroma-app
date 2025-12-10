@@ -731,6 +731,11 @@ body {
     color: #F44336;
 }
 
+.badge-gray {
+    background: #F5F5F5;
+    color: #666;
+}
+
 /* Summary Grid */
 .summary-grid {
     display: grid;

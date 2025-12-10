@@ -2,6 +2,7 @@
 let currentUser = null;
 let authToken = null;
 let selectedRole = null;
+let usandoSinPareja = false;
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
@@ -83,6 +84,15 @@ async function handleLogin(e) {
             body: JSON.stringify({ email, password })
         });
         
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Respuesta no es JSON:', text);
+            alert('Error: El servidor no devolvió JSON. Verifica la consola.');
+            return;
+        }
+        
         const data = await response.json();
         
         if (response.ok) {
@@ -94,7 +104,7 @@ async function handleLogin(e) {
             alert(data.error || 'Error al iniciar sesión');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error completo:', error);
         alert('Error de conexión: ' + error.message);
     }
 }
@@ -143,6 +153,8 @@ function checkAuth() {
     const token = localStorage.getItem('authToken');
     if (token) {
         authToken = token;
+        // Recordar si eligió usar sin pareja
+        usandoSinPareja = localStorage.getItem('usandoSinPareja') === 'true';
         cargarPerfil();
     }
 }
@@ -186,16 +198,36 @@ function mostrarPantallaPrincipal() {
         }
     }
     
-    // Cargar estadísticas rápidas del dashboard
-    cargarEstadisticasRapidas();
+    // Cargar estadísticas rápidas del dashboard con un pequeño delay
+    setTimeout(() => {
+        cargarEstadisticasRapidas();
+    }, 100);
     
-    if (currentUser && currentUser.pareja_id) {
+    if (currentUser && (currentUser.pareja_id || usandoSinPareja)) {
         document.getElementById('vinculacion-section').classList.add('hidden');
         document.getElementById('menu-principal').classList.remove('hidden');
-        cargarSemaforo();
+        
+        // Mostrar/ocultar secciones según si tiene pareja
+        if (currentUser.pareja_id) {
+            // Usuario con pareja - mostrar todas las secciones
+            document.getElementById('menu-gastos-compartidos').style.display = 'block';
+            document.getElementById('menu-ahorros').style.display = 'block';
+            document.getElementById('menu-pendientes').style.display = 'block';
+            document.getElementById('menu-planes').style.display = 'block';
+            cargarSemaforo();
+        } else {
+            // Usuario sin pareja - solo ocultar "Nuestros gastos", el resto sí puede usarlo
+            document.getElementById('menu-gastos-compartidos').style.display = 'none';
+            document.getElementById('menu-ahorros').style.display = 'block';
+            document.getElementById('menu-pendientes').style.display = 'block';
+            document.getElementById('menu-planes').style.display = 'block';
+        }
     } else {
         document.getElementById('vinculacion-section').classList.remove('hidden');
         document.getElementById('menu-principal').classList.add('hidden');
+        // Asegurar que los datos estén en cero para usuarios sin pareja
+        document.getElementById('stat-ahorros-total').textContent = '$0';
+        document.getElementById('stat-pendientes-activos').textContent = '0 tareas';
     }
 }
 
@@ -254,6 +286,10 @@ function mostrarSeccion(seccion) {
     
     if (seccion === 'menu') {
         document.getElementById('menu-principal').classList.remove('hidden');
+        // Recargar estadísticas cuando vuelve al menú principal
+        setTimeout(() => {
+            cargarEstadisticasRapidas();
+        }, 100);
     } else {
         document.getElementById(`seccion-${seccion}`).classList.remove('hidden');
         
@@ -278,21 +314,65 @@ async function cargarSemaforo() {
         
         const data = await response.json();
         
-        if (response.ok && data.semaforo) {
-            const semaforo = data.semaforo;
-            const html = `
-                <div class="semaforo ${semaforo.estado}">
-                    ${semaforo.mensaje}<br>
-                    Gastos: $${data.total_gastos ? data.total_gastos.toLocaleString() : '0'}
-                </div>
-            `;
-            const container = document.getElementById('semaforo-container');
-            if (container) {
-                container.innerHTML = html;
+
+        
+        if (response.ok) {
+            const totalGastos = data.total_gastos || 0;
+            const ingresoMensual = currentUser?.ingreso_mensual || 0;
+            const porcentajeGastado = ingresoMensual > 0 ? (totalGastos / ingresoMensual * 100) : 0;
+            
+            // Actualizar elementos del semáforo
+            document.getElementById('semaforo-gastado').textContent = `$${totalGastos.toLocaleString()}`;
+            document.getElementById('semaforo-presupuesto').textContent = `$${ingresoMensual.toLocaleString()}`;
+            
+            // Actualizar barra de progreso
+            const fillElement = document.getElementById('semaforo-fill');
+            fillElement.style.width = `${Math.min(porcentajeGastado, 100)}%`;
+            
+            // Actualizar estado y colores
+            const estadoElement = document.getElementById('semaforo-estado');
+            
+            if (porcentajeGastado <= 50) {
+                // Verde - Buen estado
+                estadoElement.textContent = 'En buen estado';
+                estadoElement.className = 'badge badge-green';
+                fillElement.style.background = 'linear-gradient(90deg, #00C853, #4CAF50)';
+            } else if (porcentajeGastado <= 80) {
+                // Amarillo - Precaución
+                estadoElement.textContent = 'Precaución';
+                estadoElement.className = 'badge badge-yellow';
+                fillElement.style.background = 'linear-gradient(90deg, #FF9800, #FFB300)';
+            } else {
+                // Rojo - Alerta
+                estadoElement.textContent = 'Alerta';
+                estadoElement.className = 'badge badge-red';
+                fillElement.style.background = 'linear-gradient(90deg, #F44336, #E57373)';
             }
+            
+            // Actualizar resumen personal
+            document.getElementById('resumen-aporte').textContent = `$${totalGastos.toLocaleString()}`;
+            document.getElementById('resumen-porcentaje').textContent = `${porcentajeGastado.toFixed(0)}%`;
+            
+        } else {
+            // Error o sin datos
+            document.getElementById('semaforo-estado').textContent = 'Sin datos';
+            document.getElementById('semaforo-estado').className = 'badge badge-gray';
+            document.getElementById('semaforo-gastado').textContent = '$0';
+            document.getElementById('semaforo-presupuesto').textContent = '$0';
+            document.getElementById('resumen-aporte').textContent = '$0';
+            document.getElementById('resumen-porcentaje').textContent = '0%';
+            document.getElementById('semaforo-fill').style.width = '0%';
         }
     } catch (error) {
         console.error('Error cargando semáforo:', error);
+        // Mostrar estado de error
+        document.getElementById('semaforo-estado').textContent = 'Error';
+        document.getElementById('semaforo-estado').className = 'badge badge-gray';
+        document.getElementById('semaforo-gastado').textContent = '$0';
+        document.getElementById('semaforo-presupuesto').textContent = '$0';
+        document.getElementById('resumen-aporte').textContent = '$0';
+        document.getElementById('resumen-porcentaje').textContent = '0%';
+        document.getElementById('semaforo-fill').style.width = '0%';
     }
 }
 
@@ -304,7 +384,13 @@ async function cargarGastosCompartidos() {
         
         const data = await response.json();
         
-        if (response.ok && data.gastos) {
+        // Verificar si tiene pareja antes de procesar
+        if (!currentUser || !currentUser.pareja_id) {
+            document.getElementById('lista-gastos-compartidos').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Vincula con tu pareja para compartir gastos</p>';
+            return;
+        }
+        
+        if (response.ok && data.gastos && data.gastos.length > 0) {
             const html = data.gastos.map(g => `
                 <div class="lista-item" style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="flex: 1;">
@@ -399,20 +485,88 @@ async function cargarGastosPersonales() {
         } else {
             document.getElementById('lista-gastos-personales').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay gastos personales aún</p>';
         }
+        
+        // Actualizar presupuesto personal
+        await cargarPresupuestoPersonal();
+        
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('lista-gastos-personales').innerHTML = '<p>Error cargando gastos</p>';
     }
 }
 
+async function cargarPresupuestoPersonal() {
+    try {
+        const response = await fetch('/gastos/personales', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const data = await response.json();
+        
+        let totalGastosPersonales = 0;
+        const fechaActual = new Date();
+        const mesActual = fechaActual.getMonth();
+        const añoActual = fechaActual.getFullYear();
+        
+        if (response.ok && data.gastos) {
+            // Sumar gastos personales del mes actual
+            data.gastos.forEach(gasto => {
+                const fechaGasto = new Date(gasto.fecha);
+                if (fechaGasto.getMonth() === mesActual && fechaGasto.getFullYear() === añoActual) {
+                    totalGastosPersonales += gasto.monto || 0;
+                }
+            });
+        }
+        
+        // Calcular presupuesto personal (30% del ingreso mensual)
+        const ingresoMensual = currentUser?.ingreso_mensual || 0;
+        const presupuestoPersonal = ingresoMensual * 0.3; // 30% para gastos personales
+        const disponible = presupuestoPersonal - totalGastosPersonales;
+        const porcentajeUsado = presupuestoPersonal > 0 ? (totalGastosPersonales / presupuestoPersonal * 100) : 0;
+        
+        // Actualizar UI
+        document.getElementById('presupuesto-gastado').textContent = `${totalGastosPersonales.toLocaleString()}`;
+        document.getElementById('presupuesto-total').textContent = `${presupuestoPersonal.toLocaleString()}`;
+        document.getElementById('presupuesto-disponible').textContent = `${disponible.toLocaleString()}`;
+        
+        // Actualizar barra de progreso
+        const fillElement = document.getElementById('presupuesto-personal-fill');
+        if (fillElement) {
+            fillElement.style.width = `${Math.min(porcentajeUsado, 100)}%`;
+            
+            // Cambiar color según el porcentaje usado
+            if (porcentajeUsado <= 50) {
+                fillElement.style.background = 'linear-gradient(90deg, #4CAF50, #00C853)';
+            } else if (porcentajeUsado <= 80) {
+                fillElement.style.background = 'linear-gradient(90deg, #FF9800, #FFB300)';
+            } else {
+                fillElement.style.background = 'linear-gradient(90deg, #F44336, #E57373)';
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error cargando presupuesto personal:', error);
+        document.getElementById('presupuesto-gastado').textContent = '$0';
+        document.getElementById('presupuesto-total').textContent = '$0';
+        document.getElementById('presupuesto-disponible').textContent = '$0';
+    }
+}
+
 async function cargarAhorros() {
     try {
+        // Los ahorros pueden ser individuales o compartidos
+        if (!currentUser) {
+            document.getElementById('lista-ahorros').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando usuario</p>';
+            document.getElementById('total-ahorrado').textContent = '$0';
+            return;
+        }
+        
         const response = await fetch('/ahorros/', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
         const data = await response.json();
-        console.log('🔍 Datos de ahorros recibidos:', data);
+
         
         if (response.ok && data.ahorros && data.ahorros.length > 0) {
             const html = data.ahorros.map(a => `
@@ -426,28 +580,52 @@ async function cargarAhorros() {
             `).join('');
             
             document.getElementById('lista-ahorros').innerHTML = html;
+            
+            // Calcular total ahorrado
+            const totalAhorrado = data.ahorros.reduce((sum, ahorro) => sum + (ahorro.monto_actual || 0), 0);
+            document.getElementById('total-ahorrado').textContent = `${totalAhorrado.toLocaleString()}`;
+        } else if (response.status === 400 && !currentUser.pareja_id) {
+            // Usuario sin pareja - mostrar mensaje apropiado
+            document.getElementById('total-ahorrado').textContent = '$0';
+            document.getElementById('lista-ahorros').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay metas de ahorro aún<br><small>💡 Vincula con tu pareja para compartir metas</small></p>';
         } else {
+            document.getElementById('total-ahorrado').textContent = '$0';
             document.getElementById('lista-ahorros').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay metas de ahorro aún</p>';
         }
     } catch (error) {
         console.error('Error:', error);
+        document.getElementById('total-ahorrado').textContent = '$0';
         document.getElementById('lista-ahorros').innerHTML = '<p>Error cargando ahorros</p>';
     }
 }
 
 async function cargarPendientes() {
     try {
+        // Los pendientes pueden ser individuales o compartidos
+        if (!currentUser) {
+            document.getElementById('lista-pendientes-activos').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando usuario</p>';
+            document.getElementById('lista-pendientes-completados').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando usuario</p>';
+            // Actualizar contadores
+            document.getElementById('count-pendientes').textContent = '0';
+            document.getElementById('count-completadas').textContent = '0';
+            return;
+        }
+        
         const response = await fetch('/pendientes/', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
         const data = await response.json();
-        console.log('🔍 Datos de pendientes recibidos:', data);
+
         
         if (response.ok && data.pendientes && data.pendientes.length > 0) {
             // Separar pendientes activos y completados
             const activos = data.pendientes.filter(p => !p.completado);
             const completados = data.pendientes.filter(p => p.completado);
+            
+            // Actualizar contadores
+            document.getElementById('count-pendientes').textContent = activos.length.toString();
+            document.getElementById('count-completadas').textContent = completados.length.toString();
             
             // Renderizar pendientes activos
             const htmlActivos = activos.map(p => `
@@ -467,13 +645,25 @@ async function cargarPendientes() {
             
             document.getElementById('lista-pendientes-activos').innerHTML = htmlActivos || '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes activos</p>';
             document.getElementById('lista-pendientes-completados').innerHTML = htmlCompletados || '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes completados</p>';
+        } else if (response.status === 400 && !currentUser.pareja_id) {
+            // Usuario sin pareja - mostrar mensaje apropiado
+            document.getElementById('count-pendientes').textContent = '0';
+            document.getElementById('count-completadas').textContent = '0';
+            document.getElementById('lista-pendientes-activos').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes activos<br><small>💡 Vincula con tu pareja para compartir tareas</small></p>';
+            document.getElementById('lista-pendientes-completados').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes completados</p>';
         } else {
+            // Sin datos
+            document.getElementById('count-pendientes').textContent = '0';
+            document.getElementById('count-completadas').textContent = '0';
             document.getElementById('lista-pendientes-activos').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes activos</p>';
             document.getElementById('lista-pendientes-completados').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes completados</p>';
         }
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('lista-pendientes').innerHTML = '<p>Error cargando pendientes</p>';
+        document.getElementById('count-pendientes').textContent = '0';
+        document.getElementById('count-completadas').textContent = '0';
+        document.getElementById('lista-pendientes-activos').innerHTML = '<p>Error cargando pendientes</p>';
+        document.getElementById('lista-pendientes-completados').innerHTML = '<p>Error cargando pendientes</p>';
     }
 }
 
@@ -484,6 +674,8 @@ async function togglePendiente(id) {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         cargarPendientes();
+        // También actualizar las estadísticas rápidas
+        cargarPendientesActivos();
     } catch (error) {
         console.error('Error');
     }
@@ -581,7 +773,26 @@ function actualizarColoresBotones() {
 async function cargarInfoPareja() {
     if (!currentUser || !currentUser.pareja_id) {
         document.getElementById('info-pareja').innerHTML = `
-            <p style="color: #999;">No estás vinculado con una pareja aún.</p>
+            <div style="text-align: center; padding: 2rem;">
+                <p style="color: #999; margin-bottom: 2rem;">No estás vinculado con una pareja aún.</p>
+                
+                <div style="background: #f0f8ff; padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem;">
+                    <h4 style="color: #4A9EFF; margin-bottom: 1rem;">💑 ¿Quieres vincular con tu pareja?</h4>
+                    <p style="color: #666; font-size: 0.875rem; margin-bottom: 1.5rem;">
+                        Al vincularte podrán compartir gastos, ahorros, planes y pendientes. Tu ingreso seguirá siendo privado.
+                    </p>
+                    
+                    <div style="display: grid; gap: 1rem;">
+                        <button onclick="mostrarVinculacionEnConfig()" class="btn" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%); color: white; font-weight: 600;">
+                            💕 Vincular con mi pareja
+                        </button>
+                    </div>
+                </div>
+                
+                <p style="color: #999; font-size: 0.875rem;">
+                    También puedes seguir usando Miroma de forma individual
+                </p>
+            </div>
         `;
         return;
     }
@@ -809,6 +1020,8 @@ async function crearAhorro(event) {
             cerrarModal('modal-crear-ahorro');
             document.getElementById('form-crear-ahorro').reset();
             cargarAhorros();
+            // Actualizar estadísticas rápidas
+            cargarEstadisticasRapidas();
         } else {
             const error = await response.json();
             alert(error.error || 'Error al crear meta');
@@ -848,6 +1061,8 @@ async function agregarAporte(event) {
             cerrarModal('modal-agregar-aporte');
             document.getElementById('form-agregar-aporte').reset();
             cargarAhorros();
+            // Actualizar estadísticas rápidas
+            cargarEstadisticasRapidas();
         } else {
             const error = await response.json();
             alert(error.error || 'Error al agregar aporte');
@@ -884,6 +1099,8 @@ async function crearPendiente(event) {
             cerrarModal('modal-crear-pendiente');
             document.getElementById('form-crear-pendiente').reset();
             cargarPendientes();
+            // Actualizar estadísticas rápidas
+            cargarEstadisticasRapidas();
         } else {
             const error = await response.json();
             alert(error.error || 'Error al crear pendiente');
@@ -919,6 +1136,8 @@ async function crearGastoPersonal(event) {
             cerrarModal('modal-crear-gasto-personal');
             document.getElementById('form-crear-gasto-personal').reset();
             cargarGastosPersonales();
+            // Actualizar estadísticas rápidas
+            cargarEstadisticasRapidas();
         } else {
             const error = await response.json();
             alert(error.error || 'Error al crear gasto');
@@ -1096,6 +1315,8 @@ async function eliminarGastoPersonal(gastoId) {
             alert('✅ Gasto eliminado exitosamente');
             cargarGastosPersonales();
             cargarSemaforo();
+            // Actualizar estadísticas rápidas
+            cargarEstadisticasRapidas();
         } else {
             alert(data.error || 'Error al eliminar gasto');
         }
@@ -1109,8 +1330,6 @@ async function eliminarGastoPersonal(gastoId) {
 // ============================================
 
 async function descargarReportePDF() {
-    console.log('🔍 Función descargarReportePDF llamada');
-    alert('🔍 Función PDF ejecutándose...');
     try {
         const response = await fetch('/reportes/pdf', {
             method: 'GET',
@@ -1220,6 +1439,20 @@ async function limpiarTodosLosDatos() {
 
 async function cargarEstadisticasRapidas() {
     try {
+        // Verificar que tenemos los datos necesarios
+        if (!currentUser || !authToken) {
+            console.log('Usuario o token no disponible, reintentando...');
+            setTimeout(cargarEstadisticasRapidas, 500);
+            return;
+        }
+        
+        // Inicializar con valores por defecto
+        document.getElementById('stat-gastos-mes').textContent = '$0';
+        document.getElementById('stat-ahorros-total').textContent = '$0';
+        document.getElementById('stat-pendientes-activos').textContent = '0 tareas';
+        document.getElementById('disponible-ingreso').textContent = '$0';
+        document.getElementById('disponible-restante').textContent = '$0';
+        
         // Cargar disponible según sueldo
         await cargarDisponibleMensual();
         
@@ -1234,6 +1467,12 @@ async function cargarEstadisticasRapidas() {
         
     } catch (error) {
         console.error('Error cargando estadísticas:', error);
+        // Asegurar valores por defecto en caso de error
+        document.getElementById('stat-gastos-mes').textContent = '$0';
+        document.getElementById('stat-ahorros-total').textContent = '$0';
+        document.getElementById('stat-pendientes-activos').textContent = '0 tareas';
+        document.getElementById('disponible-ingreso').textContent = '$0';
+        document.getElementById('disponible-restante').textContent = '$0';
     }
 }
 
@@ -1291,6 +1530,12 @@ async function cargarGastosDelMes() {
 
 async function cargarAhorrosAcumulados() {
     try {
+        // Cargar ahorros (individuales o compartidos)
+        if (!currentUser) {
+            document.getElementById('stat-ahorros-total').textContent = '$0';
+            return;
+        }
+        
         const response = await fetch('/ahorros/', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
@@ -1299,7 +1544,7 @@ async function cargarAhorrosAcumulados() {
         
         if (response.ok) {
             const data = await response.json();
-            if (data.ahorros) {
+            if (data.ahorros && data.ahorros.length > 0) {
                 totalAhorros = data.ahorros.reduce((sum, ahorro) => sum + (ahorro.monto_actual || 0), 0);
             }
         }
@@ -1315,6 +1560,12 @@ async function cargarAhorrosAcumulados() {
 
 async function cargarPendientesActivos() {
     try {
+        // Cargar pendientes (individuales o compartidos)
+        if (!currentUser) {
+            document.getElementById('stat-pendientes-activos').textContent = '0 tareas';
+            return;
+        }
+        
         const response = await fetch('/pendientes/', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
@@ -1323,7 +1574,7 @@ async function cargarPendientesActivos() {
         
         if (response.ok) {
             const data = await response.json();
-            if (data.pendientes) {
+            if (data.pendientes && data.pendientes.length > 0) {
                 pendientesActivos = data.pendientes.filter(p => !p.completado).length;
             }
         }
@@ -1410,5 +1661,148 @@ async function cargarDisponibleMensual() {
         console.error('Error cargando disponible mensual:', error);
         document.getElementById('disponible-ingreso').textContent = '$0';
         document.getElementById('disponible-restante').textContent = '$0';
+    }
+}
+// ============================================
+// USO SIN PAREJA
+// ============================================
+
+function usarSinPareja() {
+    // Marcar que está usando sin pareja
+    usandoSinPareja = true;
+    localStorage.setItem('usandoSinPareja', 'true');
+    
+    // Ocultar sección de vinculación y mostrar menú principal
+    document.getElementById('vinculacion-section').classList.add('hidden');
+    document.getElementById('menu-principal').classList.remove('hidden');
+    
+    // Solo ocultar "Nuestros gastos", el resto sí puede usarlo individualmente
+    document.getElementById('menu-gastos-compartidos').style.display = 'none';
+    document.getElementById('menu-ahorros').style.display = 'block';
+    document.getElementById('menu-pendientes').style.display = 'block';
+    document.getElementById('menu-planes').style.display = 'block';
+    
+    // Cargar estadísticas para usuario individual
+    cargarEstadisticasRapidas();
+    
+    alert('✅ ¡Perfecto! Puedes usar Miroma de forma individual.\n\n💡 Si más tarde quieres vincular con tu pareja, ve a Configuración.');
+}
+function mostrarVinculacionEnConfig() {
+    // Mostrar modal de vinculación
+    const modalHTML = `
+        <div id="modal-vinculacion" class="modal active">
+            <div class="modal-content">
+                <h3 style="text-align: center; margin-bottom: 2rem; color: #FF69B4;">💑 Vincular con tu Pareja</h3>
+                
+                <div class="grid" style="gap: 2rem;">
+                    <div>
+                        <h4 style="font-size: 1rem; margin-bottom: 1rem;">Generar Código</h4>
+                        <p style="color: #666; font-size: 0.875rem; margin-bottom: 1rem;">
+                            Genera un código para que tu pareja se vincule contigo
+                        </p>
+                        <button onclick="generarCodigoEnModal()" class="btn btn-primary" style="margin-bottom: 1rem;">
+                            Generar Código
+                        </button>
+                        <p id="codigo-generado-modal" style="text-align: center; font-size: 1.5rem; font-weight: 700; color: #FF69B4;"></p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="font-size: 1rem; margin-bottom: 1rem;">Ingresar Código</h4>
+                        <p style="color: #666; font-size: 0.875rem; margin-bottom: 1rem;">
+                            Ingresa el código que te dio tu pareja
+                        </p>
+                        <input type="text" id="input-codigo-modal" placeholder="Código de 6 dígitos" maxlength="6" style="margin-bottom: 1rem;">
+                        <button onclick="vincularEnModal()" class="btn btn-secondary">
+                            Vincular
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button onclick="cerrarModalVinculacion()" class="btn btn-ghost">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Agregar modal al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+async function generarCodigoEnModal() {
+    try {
+        const response = await fetch('/auth/generar-codigo', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('codigo-generado-modal').textContent = data.codigo;
+            alert('✅ Código generado exitosamente\\n\\n📱 Comparte este código con tu pareja para que se vincule contigo');
+        } else {
+            alert('❌ Error: ' + (data.error || 'No se pudo generar el código'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+async function vincularEnModal() {
+    const codigo = document.getElementById('input-codigo-modal').value.trim();
+    
+    if (!codigo) {
+        alert('❌ Por favor ingresa el código');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/auth/vincular', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ codigo })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ ¡Vinculación exitosa!\\n\\n💑 Ahora pueden compartir gastos, ahorros, planes y pendientes');
+            
+            // Actualizar usuario actual
+            currentUser.pareja_id = data.pareja.id;
+            
+            // Limpiar preferencia de usar sin pareja
+            usandoSinPareja = false;
+            localStorage.removeItem('usandoSinPareja');
+            
+            // Mostrar secciones compartidas
+            document.getElementById('menu-gastos-compartidos').style.display = 'block';
+            document.getElementById('menu-ahorros').style.display = 'block';
+            document.getElementById('menu-pendientes').style.display = 'block';
+            document.getElementById('menu-planes').style.display = 'block';
+            
+            // Cerrar modal y recargar info
+            cerrarModalVinculacion();
+            cargarInfoPareja();
+        } else {
+            alert('❌ Error: ' + (data.error || 'Código inválido'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+function cerrarModalVinculacion() {
+    const modal = document.getElementById('modal-vinculacion');
+    if (modal) {
+        modal.remove();
     }
 }

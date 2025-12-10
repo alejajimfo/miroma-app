@@ -21,11 +21,7 @@ def make_shell_context():
         'Pendiente': Pendiente,
     }
 
-@app.route('/')
-def index():
-    """Ruta principal - redirige directamente a la app"""
-    from flask import redirect
-    return redirect('/static/index.html')
+# La ruta principal se maneja en __init__.py
 
 @app.route('/api/docs')
 def api_docs():

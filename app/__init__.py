@@ -29,7 +29,7 @@ def create_app(config_class=Config):
     login_manager.login_message = 'Por favor inicia sesión para acceder.'
     
     # Registrar blueprints
-    from app.routes import auth, gastos, ahorros, planes, pendientes, configuracion, reportes
+    from app.routes import auth, gastos, ahorros, planes, pendientes, configuracion, reportes, admin
     
     app.register_blueprint(auth.bp)
     app.register_blueprint(gastos.bp)
@@ -38,6 +38,20 @@ def create_app(config_class=Config):
     app.register_blueprint(pendientes.bp)
     app.register_blueprint(configuracion.bp)
     app.register_blueprint(reportes.bp)
+    app.register_blueprint(admin.bp)
+    
+    # Ruta principal
+    @app.route('/')
+    def index():
+        """Ruta principal - sirve la aplicación"""
+        import os
+        from flask import send_file
+        
+        # Obtener la ruta absoluta del archivo
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        html_path = os.path.join(current_dir, 'static', 'index.html')
+        
+        return send_file(html_path)
     
     # Crear tablas
     with app.app_context():

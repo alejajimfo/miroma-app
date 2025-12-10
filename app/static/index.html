@@ -202,22 +202,38 @@
                     </div>
                 </div>
                 <button onclick="handleLogout()" class="btn-ghost" style="width: auto;">
-                    🚪
+                    Salir
                 </button>
             </div>
 
             <!-- Vinculación -->
             <div id="vinculacion-section" class="hidden">
                 <div class="card" style="max-width: 600px; margin: 0 auto;">
-                    <h2 class="card-title" style="text-align: center;">Vincular con tu Pareja</h2>
+                    <h2 class="card-title" style="text-align: center;">¿Quieres vincular con tu pareja?</h2>
+                    <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+                        Puedes usar Miroma solo o vincularte con tu pareja para compartir gastos
+                    </p>
+                    
+                    <!-- Opción: Usar sin pareja -->
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <button onclick="usarSinPareja()" class="btn" style="background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%); color: white; font-weight: 600; margin-bottom: 1rem;">
+                            👤 Usar sin pareja (Solo yo)
+                        </button>
+                        <p style="font-size: 0.875rem; color: #999;">Podrás vincular más tarde en Configuración</p>
+                    </div>
+                    
+                    <hr style="margin: 2rem 0; border: none; border-top: 1px solid #eee;">
+                    
+                    <!-- Opción: Vincular ahora -->
+                    <h3 style="text-align: center; margin-bottom: 1.5rem; color: #FF69B4;">💑 O vincular ahora</h3>
                     <div class="grid">
                         <div>
-                            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Generar Código</h3>
+                            <h4 style="font-size: 1rem; margin-bottom: 1rem;">Generar Código</h4>
                             <button id="btn-generar-codigo" class="btn btn-primary">Generar Código</button>
                             <p id="codigo-generado" class="mt-20" style="text-align: center; font-size: 1.5rem; font-weight: 700; color: #FF69B4;"></p>
                         </div>
                         <div>
-                            <h3 style="font-size: 1rem; margin-bottom: 1rem;">Ingresar Código</h3>
+                            <h4 style="font-size: 1rem; margin-bottom: 1rem;">Ingresar Código</h4>
                             <input type="text" id="input-codigo" placeholder="Código de 6 dígitos" maxlength="6" style="margin-bottom: 1rem;">
                             <button id="btn-vincular" class="btn btn-secondary">Vincular</button>
                         </div>
@@ -229,7 +245,7 @@
             <div id="menu-principal" class="hidden">
                 <!-- Menu Cards -->
                 <div class="plans-grid">
-                    <div class="menu-card" onclick="mostrarSeccion('gastos-compartidos')">
+                    <div id="menu-gastos-compartidos" class="menu-card" onclick="mostrarSeccion('gastos-compartidos')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #00C853 0%, #00E676 100%);">
                             📊
                         </div>
@@ -249,33 +265,33 @@
                         </div>
                     </div>
                     
-                    <div class="menu-card" onclick="mostrarSeccion('ahorros')">
+                    <div id="menu-ahorros" class="menu-card" onclick="mostrarSeccion('ahorros')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #FF9800 0%, #FFB300 100%);">
                             🐷
                         </div>
                         <div>
                             <div class="menu-card-title" style="color: #FF9800;">Ahorros</div>
-                            <div class="menu-card-description">Metas conjuntas</div>
+                            <div class="menu-card-description">Metas de ahorro</div>
                         </div>
                     </div>
                     
-                    <div class="menu-card" onclick="mostrarSeccion('pendientes')">
+                    <div id="menu-pendientes" class="menu-card" onclick="mostrarSeccion('pendientes')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%);">
                             ✓
                         </div>
                         <div>
                             <div class="menu-card-title" style="color: #9C27B0;">Pendientes</div>
-                            <div class="menu-card-description">Lista de tareas juntos</div>
+                            <div class="menu-card-description">Lista de tareas</div>
                         </div>
                     </div>
                     
-                    <div class="menu-card" onclick="mostrarSeccion('planes')">
+                    <div id="menu-planes" class="menu-card" onclick="mostrarSeccion('planes')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #5E72E4 0%, #825EE4 100%);">
                             🚀
                         </div>
                         <div>
                             <div class="menu-card-title" style="color: #5E72E4;">Planes a futuro</div>
-                            <div class="menu-card-description">Proyectos y sueños</div>
+                            <div class="menu-card-description">Proyectos futuros</div>
                         </div>
                     </div>
                     
@@ -312,9 +328,14 @@
                         </div>
                     </div>
                     
-                    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        💜 Resumen rápido
-                    </h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;"></div>
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            💜 Resumen rápido
+                        </h3>
+                        <button onclick="cargarEstadisticasRapidas()" class="btn-ghost" style="padding: 0.5rem; border-radius: 50%; width: 2.5rem; height: 2.5rem; font-size: 1rem;" title="Actualizar datos">
+                            🔄
+                        </button>
+                    </div>
                     <div class="quick-stats">
                         <div class="stat-card green">
                             <p class="stat-label" style="color: #00C853;">Gastos este mes</p>
@@ -347,14 +368,14 @@
                 <div class="card">
                     <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         📊 Semáforo financiero
-                        <span id="semaforo-estado" class="badge badge-green">En buen estado</span>
+                        <span id="semaforo-estado" class="badge badge-green">Calculando...</span>
                     </h3>
                     <div id="semaforo-barra" class="progress-bar-large">
-                        <div class="progress-fill-large" style="width: 42.5%"></div>
+                        <div id="semaforo-fill" class="progress-fill-large" style="width: 0%"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.875rem;">
-                        <span style="color: #666;"><span id="semaforo-gastado">$850,000</span> gastados</span>
-                        <span style="color: #666;"><span id="semaforo-presupuesto">$2,000,000</span> presupuesto</span>
+                        <span style="color: #666;"><span id="semaforo-gastado">$0</span> gastados</span>
+                        <span style="color: #666;"><span id="semaforo-presupuesto">$0</span> presupuesto</span>
                     </div>
                 </div>
                 
@@ -364,11 +385,11 @@
                     <div class="summary-grid">
                         <div class="summary-item" style="background: #E8F5E9;">
                             <p class="summary-label">Tu aporte total</p>
-                            <p class="summary-value" style="color: #00C853;" id="resumen-aporte">$566,666</p>
+                            <p class="summary-value" style="color: #00C853;" id="resumen-aporte">$0</p>
                         </div>
                         <div class="summary-item" style="background: #E3F2FD;">
                             <p class="summary-label">Porcentaje</p>
-                            <p class="summary-value" style="color: #2196F3;" id="resumen-porcentaje">67%</p>
+                            <p class="summary-value" style="color: #2196F3;" id="resumen-porcentaje">0%</p>
                         </div>
                     </div>
                     <div class="info-box">
@@ -401,13 +422,13 @@
                         <div class="progress-fill-large" id="presupuesto-personal-fill" style="width: 36%; background: linear-gradient(90deg, #FF69B4 0%, #FF1493 100%);"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 0.75rem; font-size: 0.875rem;">
-                        <span style="color: #666;"><span id="presupuesto-gastado">$180,000</span> gastados</span>
-                        <span style="color: #666;"><span id="presupuesto-total">$500,000</span> presupuesto</span>
+                        <span style="color: #666;"><span id="presupuesto-gastado">$0</span> gastados</span>
+                        <span style="color: #666;"><span id="presupuesto-total">$0</span> presupuesto</span>
                     </div>
                     
                     <div class="summary-item" style="background: #FCE4EC; margin-top: 1.5rem;">
                         <p class="summary-label">Disponible</p>
-                        <p class="summary-value" style="color: #FF69B4;" id="presupuesto-disponible">$320,000</p>
+                        <p class="summary-value" style="color: #FF69B4;" id="presupuesto-disponible">$0</p>
                     </div>
                 </div>
                 
@@ -433,7 +454,7 @@
                     <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         📈 Total ahorrado
                     </h3>
-                    <p style="font-size: 2rem; font-weight: 700; color: #FF9800; margin: 0;" id="total-ahorrado">$15,500,000</p>
+                    <p style="font-size: 2rem; font-weight: 700; color: #FF9800; margin: 0;" id="total-ahorrado">$0</p>
                     <p style="color: #999; font-size: 0.875rem; margin-top: 0.5rem;">Entre todas las metas</p>
                 </div>
                 
@@ -455,11 +476,11 @@
                 <div class="summary-grid">
                     <div class="card">
                         <p style="color: #999; font-size: 0.875rem; margin-bottom: 0.5rem;">Pendientes</p>
-                        <p style="font-size: 2rem; font-weight: 700; color: #9C27B0; margin: 0;" id="count-pendientes">3</p>
+                        <p style="font-size: 2rem; font-weight: 700; color: #9C27B0; margin: 0;" id="count-pendientes">0</p>
                     </div>
                     <div class="card">
                         <p style="color: #999; font-size: 0.875rem; margin-bottom: 0.5rem;">Completadas</p>
-                        <p style="font-size: 2rem; font-weight: 700; color: #00C853; margin: 0;" id="count-completadas">2</p>
+                        <p style="font-size: 2rem; font-weight: 700; color: #00C853; margin: 0;" id="count-completadas">0</p>
                     </div>
                 </div>
                 
@@ -806,7 +827,6 @@
     </div>
 
     <script src="/static/js/app.js"></script>
-    <script src="/static/js/planes.js"></script>
     <script>
         
         // Register Service Worker for PWA

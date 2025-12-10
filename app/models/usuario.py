@@ -35,8 +35,14 @@ class Usuario(UserMixin, db.Model):
         self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     def check_password(self, password):
-        """Verificar contraseña"""
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        """Verificar contraseña - compatible con bcrypt y werkzeug"""
+        try:
+            # Intentar con bcrypt primero
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        except ValueError:
+            # Si falla, intentar con werkzeug (para usuarios antiguos)
+            from werkzeug.security import check_password_hash
+            return check_password_hash(self.password_hash, password)
     
     def to_dict(self, include_private=False):
         """Convertir a diccionario"""

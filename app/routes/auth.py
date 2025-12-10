@@ -415,7 +415,8 @@ def recuperar_password():
             mail.send(msg)
             email_enviado = True
         except Exception as e:
-            print(f'Error enviando email: {e}')
+            # Error enviando email - continuar sin enviar
+            pass
     
     # Respuesta
     response = {
