@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_jwt_extended import create_access_token
 from app import db
@@ -11,7 +11,10 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def registro():
     """Registro de nuevo usuario"""
     if request.method == 'GET':
-        return render_template('auth/registro.html')
+        # Redireccionar a la página principal para SPA
+        return redirect('/')
+    
+    # POST para API
     
     data = request.get_json() if request.is_json else request.form
     
@@ -65,7 +68,10 @@ def registro():
 def login():
     """Login de usuario"""
     if request.method == 'GET':
-        return render_template('auth/login.html')
+        # Redireccionar a la página principal para SPA
+        return redirect('/')
+    
+    # POST para API
     
     data = request.get_json() if request.is_json else request.form
     
