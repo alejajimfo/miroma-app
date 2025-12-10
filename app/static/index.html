@@ -292,21 +292,41 @@
                 
                 <!-- Quick Stats -->
                 <div class="card" style="margin-top: 2rem;">
+                    <!-- Disponible según sueldo -->
+                    <div class="card" style="background: linear-gradient(135deg, #4CAF50 0%, #00C853 100%); color: white; margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: white;">
+                            💰 Disponible este mes
+                        </h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Tu ingreso mensual</p>
+                                <p style="font-size: 2rem; font-weight: 700;" id="disponible-ingreso">$0</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Disponible</p>
+                                <p style="font-size: 2rem; font-weight: 700;" id="disponible-restante">$0</p>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; font-size: 0.875rem;">
+                            <strong>💡 Tip:</strong> Este es tu saldo después de restar los gastos del mes actual
+                        </div>
+                    </div>
+                    
                     <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                         💜 Resumen rápido
                     </h3>
                     <div class="quick-stats">
                         <div class="stat-card green">
                             <p class="stat-label" style="color: #00C853;">Gastos este mes</p>
-                            <p class="stat-value" style="color: #00C853;">$1,250,000</p>
+                            <p class="stat-value" style="color: #00C853;" id="stat-gastos-mes">$0</p>
                         </div>
                         <div class="stat-card amber">
                             <p class="stat-label" style="color: #FF9800;">Ahorros acumulados</p>
-                            <p class="stat-value" style="color: #FF9800;">$3,500,000</p>
+                            <p class="stat-value" style="color: #FF9800;" id="stat-ahorros-total">$0</p>
                         </div>
                         <div class="stat-card purple">
                             <p class="stat-label" style="color: #9C27B0;">Pendientes activos</p>
-                            <p class="stat-value" style="color: #9C27B0;">5 tareas</p>
+                            <p class="stat-value" style="color: #9C27B0;" id="stat-pendientes-activos">0 tareas</p>
                         </div>
                     </div>
                 </div>
@@ -570,6 +590,29 @@
                     </button>
                 </div>
                 
+                <!-- Reportes y Gestión de Datos -->
+                <div class="card" style="border: 3px solid #4A9EFF; background: #F3F8FF;">
+                    <h3 style="margin-bottom: 1.5rem; color: #4A9EFF; font-size: 1.5rem;">📊 Reportes y Gestión</h3>
+                    
+                    <p style="color: #666; margin-bottom: 1.5rem;">
+                        Descarga un reporte completo de tus finanzas o limpia todos los datos para empezar un nuevo periodo.
+                    </p>
+                    
+                    <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                        <button onclick="descargarReportePDF()" class="btn" style="background: linear-gradient(135deg, #00C853 0%, #4CAF50 100%); color: white; font-weight: 600;">
+                            📄 Descargar Reporte PDF
+                        </button>
+                        
+                        <button onclick="confirmarLimpiarDatos()" class="btn" style="background: linear-gradient(135deg, #FF9800 0%, #FFB300 100%); color: white; font-weight: 600;">
+                            🧹 Limpiar Todos los Datos
+                        </button>
+                    </div>
+                    
+                    <div style="background: #E3F2FD; padding: 1rem; border-radius: 8px; font-size: 0.875rem; color: #1976D2;">
+                        <strong>💡 Tip:</strong> Descarga el reporte antes de limpiar los datos para mantener un historial de tus finanzas.
+                    </div>
+                </div>
+                
                 <!-- Zona de Peligro -->
                 <div class="card" style="border: 2px solid #FFEBEE;">
                     <h3 style="margin-bottom: 1.5rem; color: #F44336;">Zona de peligro</h3>
@@ -612,12 +655,14 @@
                 <div class="form-group">
                     <label>Categoría</label>
                     <select id="gasto-categoria" required>
-                        <option value="hogar">Hogar</option>
-                        <option value="comida">Comida</option>
-                        <option value="transporte">Transporte</option>
-                        <option value="salud">Salud</option>
-                        <option value="entretenimiento">Entretenimiento</option>
-                        <option value="otros">Otros</option>
+                        <option value="hogar">🏠 Hogar</option>
+                        <option value="comida">🍽️ Comida</option>
+                        <option value="transporte">🚗 Transporte</option>
+                        <option value="salud">🏥 Salud</option>
+                        <option value="entretenimiento">🎬 Entretenimiento</option>
+                        <option value="educacion">📚 Educación</option>
+                        <option value="ropa">👕 Ropa</option>
+                        <option value="otros">📦 Otros</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Crear</button>
@@ -744,12 +789,14 @@
                 <div class="form-group">
                     <label>Categoría</label>
                     <select id="gasto-personal-categoria" required>
-                        <option value="comida">Comida</option>
-                        <option value="transporte">Transporte</option>
-                        <option value="entretenimiento">Entretenimiento</option>
-                        <option value="ropa">Ropa</option>
-                        <option value="salud">Salud</option>
-                        <option value="otros">Otros</option>
+                        <option value="comida">🍽️ Comida</option>
+                        <option value="transporte">🚗 Transporte</option>
+                        <option value="entretenimiento">🎬 Entretenimiento</option>
+                        <option value="ropa">👕 Ropa</option>
+                        <option value="salud">🏥 Salud</option>
+                        <option value="educacion">📚 Educación</option>
+                        <option value="hogar">🏠 Hogar</option>
+                        <option value="otros">📦 Otros</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Crear gasto</button>
@@ -760,13 +807,7 @@
 
     <script src="/static/js/app.js"></script>
     <script src="/static/js/planes.js"></script>
-    <script src="/static/js/gastos-ui.js"></script>
     <script>
-        // Override functions to use new UI
-        window.cargarGastosCompartidos = cargarGastosCompartidosUI;
-        window.cargarGastosPersonales = cargarGastosPersonalesUI;
-        window.cargarAhorros = cargarAhorrosUI;
-        window.cargarPendientes = cargarPendientesUI;
         
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {

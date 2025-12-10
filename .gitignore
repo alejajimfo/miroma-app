@@ -1,21 +1,59 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# Virtual environments
 env/
 venv/
 ENV/
 .venv
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Environment variables
 .env
+
+# Flask instance folder
 instance/
+
+# Testing
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Build
 dist/
 build/
 *.egg-info/
+
+# Uploads
 uploads/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp

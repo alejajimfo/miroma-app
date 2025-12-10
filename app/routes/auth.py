@@ -337,6 +337,9 @@ def recuperar_password():
     import random
     import string
     from datetime import datetime, timedelta
+    from flask_mail import Message
+    from app import mail
+    import os
     
     data = request.get_json() if request.is_json else request.form
     email = data.get('email', '').strip()
@@ -360,13 +363,71 @@ def recuperar_password():
     usuario.codigo_recuperacion_expira = datetime.utcnow() + timedelta(minutes=15)
     db.session.commit()
     
-    # En producción, aquí enviarías un email
-    # Por ahora, devolvemos el código (solo para desarrollo)
-    return jsonify({
+    # Intentar enviar email
+    email_enviado = False
+    if os.getenv('MAIL_USERNAME'):
+        try:
+            msg = Message(
+                subject='Código de Recuperación - Miroma',
+                recipients=[email],
+                html=f'''
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #FF69B4; font-size: 2rem;">💜 Miroma</h1>
+                    </div>
+                    
+                    <div style="background: #f5f0f5; padding: 30px; border-radius: 15px;">
+                        <h2 style="color: #333; margin-bottom: 20px;">Recuperación de Contraseña</h2>
+                        
+                        <p style="color: #666; font-size: 1rem; line-height: 1.6;">
+                            Hola <strong>{usuario.apodo}</strong>,
+                        </p>
+                        
+                        <p style="color: #666; font-size: 1rem; line-height: 1.6;">
+                            Recibimos una solicitud para restablecer tu contraseña. 
+                            Usa el siguiente código de verificación:
+                        </p>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; margin: 30px 0;">
+                            <p style="color: #999; font-size: 0.875rem; margin-bottom: 10px;">
+                                Código de verificación:
+                            </p>
+                            <h1 style="color: #FF69B4; font-size: 3rem; letter-spacing: 10px; margin: 0;">
+                                {codigo}
+                            </h1>
+                        </div>
+                        
+                        <p style="color: #666; font-size: 0.875rem; line-height: 1.6;">
+                            ⏰ Este código expira en <strong>15 minutos</strong>
+                        </p>
+                        
+                        <p style="color: #666; font-size: 0.875rem; line-height: 1.6; margin-top: 20px;">
+                            Si no solicitaste este cambio, ignora este mensaje.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px; color: #999; font-size: 0.75rem;">
+                        <p>Miroma - Gestiona tus finanzas en pareja 💑</p>
+                    </div>
+                </div>
+                '''
+            )
+            mail.send(msg)
+            email_enviado = True
+        except Exception as e:
+            print(f'Error enviando email: {e}')
+    
+    # Respuesta
+    response = {
         'mensaje': 'Código de recuperación generado',
-        'codigo': codigo,  # REMOVER EN PRODUCCIÓN
-        'email': email
-    }), 200
+        'email_enviado': email_enviado
+    }
+    
+    # Solo en desarrollo, mostrar el código
+    if os.getenv('FLASK_ENV') == 'development' or not email_enviado:
+        response['codigo'] = codigo
+    
+    return jsonify(response), 200
 
 @bp.route('/verificar-codigo-recuperacion', methods=['POST'])
 def verificar_codigo_recuperacion():

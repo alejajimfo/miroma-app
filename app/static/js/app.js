@@ -186,6 +186,9 @@ function mostrarPantallaPrincipal() {
         }
     }
     
+    // Cargar estadísticas rápidas del dashboard
+    cargarEstadisticasRapidas();
+    
     if (currentUser && currentUser.pareja_id) {
         document.getElementById('vinculacion-section').classList.add('hidden');
         document.getElementById('menu-principal').classList.remove('hidden');
@@ -303,19 +306,22 @@ async function cargarGastosCompartidos() {
         
         if (response.ok && data.gastos) {
             const html = data.gastos.map(g => `
-                <div class="lista-item">
-                    <div>
+                <div class="lista-item" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
                         <strong>${g.nombre}</strong><br>
                         <small>${g.categoria} - ${new Date(g.fecha).toLocaleDateString()}</small><br>
                         Total: $${g.monto_total ? g.monto_total.toLocaleString() : '0'}<br>
                         <strong style="color: var(--shared)">Tu parte: $${g.mi_aporte ? g.mi_aporte.toLocaleString() : '0'}</strong>
                     </div>
+                    <button onclick="eliminarGastoCompartido(${g.id})" class="btn-icon" style="color: #F44336; background: none; border: none; font-size: 1.5rem; cursor: pointer;" title="Eliminar">
+                        🗑️
+                    </button>
                 </div>
             `).join('');
             
-            document.getElementById('lista-gastos-compartidos').innerHTML = html || '<p>No hay gastos</p>';
+            document.getElementById('lista-gastos-compartidos').innerHTML = html;
         } else {
-            document.getElementById('lista-gastos-compartidos').innerHTML = '<p>No hay gastos</p>';
+            document.getElementById('lista-gastos-compartidos').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay gastos compartidos aún</p>';
         }
     } catch (error) {
         console.error('Error cargando gastos:', error);
@@ -353,16 +359,17 @@ async function crearGastoCompartido(e) {
         const result = await response.json();
         
         if (response.ok) {
-            alert('Gasto creado exitosamente');
+            alert('✅ Gasto creado exitosamente');
             cerrarModal('modal-crear-gasto');
             cargarGastosCompartidos();
             cargarSemaforo();
             e.target.reset();
         } else {
-            alert(result.error);
+            alert('❌ Error: ' + (result.error || 'No se pudo crear el gasto'));
         }
     } catch (error) {
-        alert('Error creando gasto');
+        console.error('Error creando gasto:', error);
+        alert('❌ Error de conexión al crear gasto');
     }
 }
 
@@ -374,20 +381,23 @@ async function cargarGastosPersonales() {
         
         const data = await response.json();
         
-        if (response.ok && data.gastos) {
+        if (response.ok && data.gastos && data.gastos.length > 0) {
             const html = data.gastos.map(g => `
-                <div class="lista-item">
-                    <div>
+                <div class="lista-item" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
                         <strong>${g.nombre}</strong><br>
                         <small>${g.categoria} - ${new Date(g.fecha).toLocaleDateString()}</small><br>
                         <strong>$${g.monto ? g.monto.toLocaleString() : '0'}</strong>
                     </div>
+                    <button onclick="eliminarGastoPersonal(${g.id})" class="btn-icon" style="color: #F44336; background: none; border: none; font-size: 1.5rem; cursor: pointer;" title="Eliminar">
+                        🗑️
+                    </button>
                 </div>
             `).join('');
             
-            document.getElementById('lista-gastos-personales').innerHTML = html || '<p>No hay gastos</p>';
+            document.getElementById('lista-gastos-personales').innerHTML = html;
         } else {
-            document.getElementById('lista-gastos-personales').innerHTML = '<p>No hay gastos</p>';
+            document.getElementById('lista-gastos-personales').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay gastos personales aún</p>';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -402,8 +412,9 @@ async function cargarAhorros() {
         });
         
         const data = await response.json();
+        console.log('🔍 Datos de ahorros recibidos:', data);
         
-        if (response.ok && data.ahorros) {
+        if (response.ok && data.ahorros && data.ahorros.length > 0) {
             const html = data.ahorros.map(a => `
                 <div class="card">
                     <h4>${a.nombre}</h4>
@@ -414,9 +425,9 @@ async function cargarAhorros() {
                 </div>
             `).join('');
             
-            document.getElementById('lista-ahorros').innerHTML = html || '<p>No hay metas</p>';
+            document.getElementById('lista-ahorros').innerHTML = html;
         } else {
-            document.getElementById('lista-ahorros').innerHTML = '<p>No hay metas</p>';
+            document.getElementById('lista-ahorros').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay metas de ahorro aún</p>';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -431,19 +442,34 @@ async function cargarPendientes() {
         });
         
         const data = await response.json();
+        console.log('🔍 Datos de pendientes recibidos:', data);
         
-        if (response.ok && data.pendientes) {
-            const html = data.pendientes.map(p => `
-                <div class="checkbox-item ${p.completado ? 'completado' : ''}">
-                    <input type="checkbox" ${p.completado ? 'checked' : ''} 
-                           onchange="togglePendiente(${p.id})">
+        if (response.ok && data.pendientes && data.pendientes.length > 0) {
+            // Separar pendientes activos y completados
+            const activos = data.pendientes.filter(p => !p.completado);
+            const completados = data.pendientes.filter(p => p.completado);
+            
+            // Renderizar pendientes activos
+            const htmlActivos = activos.map(p => `
+                <div class="checkbox-item">
+                    <input type="checkbox" onchange="togglePendiente(${p.id})">
                     <span>${p.titulo} - ${p.categoria}</span>
                 </div>
             `).join('');
             
-            document.getElementById('lista-pendientes').innerHTML = html || '<p>No hay pendientes</p>';
+            // Renderizar pendientes completados
+            const htmlCompletados = completados.map(p => `
+                <div class="checkbox-item completado">
+                    <input type="checkbox" checked onchange="togglePendiente(${p.id})">
+                    <span>${p.titulo} - ${p.categoria}</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('lista-pendientes-activos').innerHTML = htmlActivos || '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes activos</p>';
+            document.getElementById('lista-pendientes-completados').innerHTML = htmlCompletados || '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes completados</p>';
         } else {
-            document.getElementById('lista-pendientes').innerHTML = '<p>No hay pendientes</p>';
+            document.getElementById('lista-pendientes-activos').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes activos</p>';
+            document.getElementById('lista-pendientes-completados').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay pendientes completados</p>';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -925,10 +951,14 @@ async function handleRecuperarPassword(e) {
         const data = await response.json();
         
         if (response.ok) {
-            // Mostrar código en consola (solo para desarrollo)
-            if (data.codigo) {
+            // Mostrar mensaje según si se envió email o no
+            if (data.email_enviado) {
+                alert('📧 Código enviado a tu correo electrónico\nRevisa tu bandeja de entrada (y spam)');
+            } else if (data.codigo) {
                 console.log('🔑 Código de recuperación:', data.codigo);
-                alert(`Código generado: ${data.codigo}\n(En producción se enviará por email)`);
+                alert(`🔑 Código de recuperación: ${data.codigo}\n\n⚠️ Email no configurado - El código aparece aquí\n(En producción se enviará por email)`);
+            } else {
+                alert('Código generado. Revisa tu email.');
             }
             
             // Ir a pantalla de verificación
@@ -999,9 +1029,11 @@ async function reenviarCodigo() {
         const data = await response.json();
         
         if (response.ok) {
-            if (data.codigo) {
+            if (data.email_enviado) {
+                alert('📧 Nuevo código enviado a tu correo');
+            } else if (data.codigo) {
                 console.log('🔑 Nuevo código:', data.codigo);
-                alert(`Nuevo código: ${data.codigo}\n(En producción se enviará por email)`);
+                alert(`🔑 Nuevo código: ${data.codigo}\n\n⚠️ Email no configurado`);
             } else {
                 alert('Código reenviado exitosamente');
             }
@@ -1011,5 +1043,372 @@ async function reenviarCodigo() {
     } catch (error) {
         console.error('Error:', error);
         alert('Error de conexión');
+    }
+}
+// ============================================
+// FUNCIONES DE ELIMINAR GASTOS
+// ============================================
+
+async function eliminarGastoCompartido(gastoId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este gasto compartido?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/gastos/compartidos/${gastoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Gasto eliminado exitosamente');
+            cargarGastosCompartidos();
+            cargarSemaforo();
+        } else {
+            alert(data.error || 'Error al eliminar gasto');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar gasto');
+    }
+}
+
+async function eliminarGastoPersonal(gastoId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este gasto personal?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/gastos/personales/${gastoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Gasto eliminado exitosamente');
+            cargarGastosPersonales();
+            cargarSemaforo();
+        } else {
+            alert(data.error || 'Error al eliminar gasto');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar gasto');
+    }
+}
+// ============================================
+// REPORTES Y GESTIÓN DE DATOS
+// ============================================
+
+async function descargarReportePDF() {
+    console.log('🔍 Función descargarReportePDF llamada');
+    alert('🔍 Función PDF ejecutándose...');
+    try {
+        const response = await fetch('/reportes/pdf', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            // Crear blob del PDF
+            const blob = await response.blob();
+            
+            // Crear URL temporal
+            const url = window.URL.createObjectURL(blob);
+            
+            // Crear enlace de descarga
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `miroma_reporte_${new Date().toISOString().slice(0,10)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Limpiar
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            alert('📄 Reporte PDF descargado exitosamente');
+        } else {
+            const error = await response.json();
+            alert('❌ Error al generar reporte: ' + (error.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión al generar reporte');
+    }
+}
+
+function confirmarLimpiarDatos() {
+    const confirmacion = confirm(
+        '⚠️ ¿ESTÁS SEGURO?\n\n' +
+        'Esta acción eliminará TODOS los datos financieros:\n' +
+        '• Gastos compartidos\n' +
+        '• Gastos personales\n' +
+        '• Ahorros\n' +
+        '• Planes futuros\n' +
+        '• Pendientes\n\n' +
+        '💡 Recomendación: Descarga el reporte PDF antes de continuar.\n\n' +
+        'Esta acción NO se puede deshacer.'
+    );
+    
+    if (confirmacion) {
+        const segundaConfirmacion = confirm(
+            '🚨 ÚLTIMA CONFIRMACIÓN\n\n' +
+            'Escribirás "ELIMINAR" para confirmar que quieres borrar todos los datos financieros.\n\n' +
+            '¿Continuar?'
+        );
+        
+        if (segundaConfirmacion) {
+            const texto = prompt('Escribe "ELIMINAR" para confirmar:');
+            if (texto === 'ELIMINAR') {
+                limpiarTodosLosDatos();
+            } else {
+                alert('❌ Cancelado. Los datos no fueron eliminados.');
+            }
+        }
+    }
+}
+
+async function limpiarTodosLosDatos() {
+    try {
+        const response = await fetch('/reportes/eliminar-todo', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Todos los datos financieros han sido eliminados exitosamente\n\n🎉 ¡Puedes empezar un nuevo periodo!');
+            
+            // Recargar todas las secciones para mostrar datos limpios
+            cargarGastosCompartidos();
+            cargarGastosPersonales();
+            cargarAhorros();
+            cargarPlanes();
+            cargarPendientes();
+            cargarSemaforo();
+            
+            // Actualizar estadísticas del dashboard
+            cargarEstadisticasRapidas();
+            
+            // Volver al menú principal
+            mostrarSeccion('menu');
+        } else {
+            alert('❌ Error al eliminar datos: ' + (data.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión al eliminar datos');
+    }
+}
+// ============================================
+// ESTADÍSTICAS RÁPIDAS DEL DASHBOARD
+// ============================================
+
+async function cargarEstadisticasRapidas() {
+    try {
+        // Cargar disponible según sueldo
+        await cargarDisponibleMensual();
+        
+        // Cargar gastos del mes actual
+        await cargarGastosDelMes();
+        
+        // Cargar ahorros acumulados
+        await cargarAhorrosAcumulados();
+        
+        // Cargar pendientes activos
+        await cargarPendientesActivos();
+        
+    } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+    }
+}
+
+async function cargarGastosDelMes() {
+    try {
+        // Obtener gastos compartidos
+        const responseCompartidos = await fetch('/gastos/compartidos', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        // Obtener gastos personales
+        const responsePersonales = await fetch('/gastos/personales', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        let totalGastos = 0;
+        const fechaActual = new Date();
+        const mesActual = fechaActual.getMonth();
+        const añoActual = fechaActual.getFullYear();
+        
+        // Sumar gastos compartidos del mes actual
+        if (responseCompartidos.ok) {
+            const dataCompartidos = await responseCompartidos.json();
+            if (dataCompartidos.gastos) {
+                dataCompartidos.gastos.forEach(gasto => {
+                    const fechaGasto = new Date(gasto.fecha);
+                    if (fechaGasto.getMonth() === mesActual && fechaGasto.getFullYear() === añoActual) {
+                        totalGastos += gasto.mi_aporte || 0;
+                    }
+                });
+            }
+        }
+        
+        // Sumar gastos personales del mes actual
+        if (responsePersonales.ok) {
+            const dataPersonales = await responsePersonales.json();
+            if (dataPersonales.gastos) {
+                dataPersonales.gastos.forEach(gasto => {
+                    const fechaGasto = new Date(gasto.fecha);
+                    if (fechaGasto.getMonth() === mesActual && fechaGasto.getFullYear() === añoActual) {
+                        totalGastos += gasto.monto || 0;
+                    }
+                });
+            }
+        }
+        
+        // Actualizar UI
+        document.getElementById('stat-gastos-mes').textContent = `$${totalGastos.toLocaleString()}`;
+        
+    } catch (error) {
+        console.error('Error cargando gastos del mes:', error);
+        document.getElementById('stat-gastos-mes').textContent = '$0';
+    }
+}
+
+async function cargarAhorrosAcumulados() {
+    try {
+        const response = await fetch('/ahorros/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        let totalAhorros = 0;
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.ahorros) {
+                totalAhorros = data.ahorros.reduce((sum, ahorro) => sum + (ahorro.monto_actual || 0), 0);
+            }
+        }
+        
+        // Actualizar UI
+        document.getElementById('stat-ahorros-total').textContent = `$${totalAhorros.toLocaleString()}`;
+        
+    } catch (error) {
+        console.error('Error cargando ahorros:', error);
+        document.getElementById('stat-ahorros-total').textContent = '$0';
+    }
+}
+
+async function cargarPendientesActivos() {
+    try {
+        const response = await fetch('/pendientes/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        let pendientesActivos = 0;
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.pendientes) {
+                pendientesActivos = data.pendientes.filter(p => !p.completado).length;
+            }
+        }
+        
+        // Actualizar UI
+        const texto = pendientesActivos === 1 ? '1 tarea' : `${pendientesActivos} tareas`;
+        document.getElementById('stat-pendientes-activos').textContent = texto;
+        
+    } catch (error) {
+        console.error('Error cargando pendientes:', error);
+        document.getElementById('stat-pendientes-activos').textContent = '0 tareas';
+    }
+}
+async function cargarDisponibleMensual() {
+    try {
+        // Mostrar ingreso mensual
+        const ingresoMensual = currentUser?.ingreso_mensual || 0;
+        document.getElementById('disponible-ingreso').textContent = `$${ingresoMensual.toLocaleString()}`;
+        
+        // Calcular gastos del mes actual
+        let totalGastosMes = 0;
+        
+        // Obtener gastos compartidos
+        const responseCompartidos = await fetch('/gastos/compartidos', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        // Obtener gastos personales
+        const responsePersonales = await fetch('/gastos/personales', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const fechaActual = new Date();
+        const mesActual = fechaActual.getMonth();
+        const añoActual = fechaActual.getFullYear();
+        
+        // Sumar gastos compartidos del mes actual
+        if (responseCompartidos.ok) {
+            const dataCompartidos = await responseCompartidos.json();
+            if (dataCompartidos.gastos) {
+                dataCompartidos.gastos.forEach(gasto => {
+                    const fechaGasto = new Date(gasto.fecha);
+                    if (fechaGasto.getMonth() === mesActual && fechaGasto.getFullYear() === añoActual) {
+                        totalGastosMes += gasto.mi_aporte || 0;
+                    }
+                });
+            }
+        }
+        
+        // Sumar gastos personales del mes actual
+        if (responsePersonales.ok) {
+            const dataPersonales = await responsePersonales.json();
+            if (dataPersonales.gastos) {
+                dataPersonales.gastos.forEach(gasto => {
+                    const fechaGasto = new Date(gasto.fecha);
+                    if (fechaGasto.getMonth() === mesActual && fechaGasto.getFullYear() === añoActual) {
+                        totalGastosMes += gasto.monto || 0;
+                    }
+                });
+            }
+        }
+        
+        // Calcular disponible
+        const disponible = ingresoMensual - totalGastosMes;
+        
+        // Actualizar UI con color según el disponible
+        const elementoDisponible = document.getElementById('disponible-restante');
+        elementoDisponible.textContent = `$${disponible.toLocaleString()}`;
+        
+        // Cambiar color según el disponible
+        const cardDisponible = elementoDisponible.closest('.card');
+        if (disponible < 0) {
+            // Rojo si está en números rojos
+            cardDisponible.style.background = 'linear-gradient(135deg, #F44336 0%, #D32F2F 100%)';
+        } else if (disponible < ingresoMensual * 0.2) {
+            // Naranja si queda menos del 20%
+            cardDisponible.style.background = 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+        } else {
+            // Verde si está bien
+            cardDisponible.style.background = 'linear-gradient(135deg, #4CAF50 0%, #00C853 100%)';
+        }
+        
+    } catch (error) {
+        console.error('Error cargando disponible mensual:', error);
+        document.getElementById('disponible-ingreso').textContent = '$0';
+        document.getElementById('disponible-restante').textContent = '$0';
     }
 }
