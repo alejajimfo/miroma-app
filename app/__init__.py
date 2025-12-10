@@ -29,7 +29,7 @@ def create_app(config_class=Config):
     login_manager.login_message = 'Por favor inicia sesión para acceder.'
     
     # Registrar blueprints
-    from app.routes import auth, gastos, ahorros, planes, pendientes, configuracion, reportes, admin
+    from app.routes import auth, gastos, ahorros, planes, pendientes, configuracion, reportes, admin, deudas
     
     app.register_blueprint(auth.bp)
     app.register_blueprint(gastos.bp)
@@ -39,6 +39,7 @@ def create_app(config_class=Config):
     app.register_blueprint(configuracion.bp)
     app.register_blueprint(reportes.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(deudas.bp)
     
     # Ruta principal
     @app.route('/')

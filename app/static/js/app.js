@@ -302,6 +302,7 @@ function mostrarSeccion(seccion) {
         if (seccion === 'ahorros') cargarAhorros();
         if (seccion === 'pendientes') cargarPendientes();
         if (seccion === 'planes') cargarPlanes();
+        if (seccion === 'deudas') cargarDeudas();
         if (seccion === 'configuracion') cargarConfiguracion();
     }
 }
@@ -449,6 +450,7 @@ async function crearGastoCompartido(e) {
             cerrarModal('modal-crear-gasto');
             cargarGastosCompartidos();
             cargarSemaforo();
+            cargarDisponibleMensual(); // Actualizar saldo disponible
             e.target.reset();
         } else {
             alert('❌ Error: ' + (result.error || 'No se pudo crear el gasto'));
@@ -1287,6 +1289,7 @@ async function eliminarGastoCompartido(gastoId) {
             alert('✅ Gasto eliminado exitosamente');
             cargarGastosCompartidos();
             cargarSemaforo();
+            cargarDisponibleMensual(); // Actualizar saldo disponible
         } else {
             alert(data.error || 'Error al eliminar gasto');
         }
@@ -1315,6 +1318,7 @@ async function eliminarGastoPersonal(gastoId) {
             alert('✅ Gasto eliminado exitosamente');
             cargarGastosPersonales();
             cargarSemaforo();
+            cargarDisponibleMensual(); // Actualizar saldo disponible
             // Actualizar estadísticas rápidas
             cargarEstadisticasRapidas();
         } else {
@@ -1804,5 +1808,386 @@ function cerrarModalVinculacion() {
     const modal = document.getElementById('modal-vinculacion');
     if (modal) {
         modal.remove();
+    }
+}
+
+// ============================================
+// FUNCIONES DE DEUDAS
+// ============================================
+
+async function cargarDeudas() {
+    try {
+        const response = await fetch('/deudas/', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Actualizar totales
+            document.getElementById('total-debo').textContent = `$${data.totales.debo.toLocaleString()}`;
+            document.getElementById('total-me-deben').textContent = `$${data.totales.me_deben.toLocaleString()}`;
+            
+            const balance = data.totales.balance;
+            const elementoBalance = document.getElementById('balance-deudas');
+            elementoBalance.textContent = `$${Math.abs(balance).toLocaleString()}`;
+            
+            if (balance > 0) {
+                elementoBalance.style.color = '#4CAF50'; // Verde - me deben más
+            } else if (balance < 0) {
+                elementoBalance.style.color = '#E91E63'; // Rosa - debo más
+            } else {
+                elementoBalance.style.color = '#2196F3'; // Azul - equilibrado
+            }
+            
+            // Renderizar listas
+            renderizarDeudas(data.deudas.debo, 'lista-debo');
+            renderizarDeudas(data.deudas.me_deben, 'lista-me-deben');
+        } else {
+            document.getElementById('lista-debo').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando deudas</p>';
+            document.getElementById('lista-me-deben').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando deudas</p>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('lista-debo').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando deudas</p>';
+        document.getElementById('lista-me-deben').innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">Error cargando deudas</p>';
+    }
+}
+
+function renderizarDeudas(deudas, containerId) {
+    const container = document.getElementById(containerId);
+    
+    if (deudas.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #999; padding: 2rem;">No hay deudas registradas</p>';
+        return;
+    }
+    
+    const html = deudas.map(deuda => {
+        const estadoClass = deuda.estado === 'pagada' ? 'completado' : '';
+        const estadoText = deuda.estado === 'pagada' ? 'Pagada' : 'Pendiente';
+        const estadoColor = deuda.estado === 'pagada' ? '#4CAF50' : '#FF9800';
+        
+        let botonesAccion = '';
+        if (deuda.estado === 'pendiente') {
+            botonesAccion = `
+                <button onclick="mostrarModalAbono(${deuda.id})" class="btn-icon" style="color: #2196F3; background: none; border: none; font-size: 1rem; cursor: pointer; margin-right: 0.5rem;" title="Agregar abono">
+                    💰
+                </button>
+                <button onclick="marcarDeudaPagada(${deuda.id})" class="btn-icon" style="color: #4CAF50; background: none; border: none; font-size: 1rem; cursor: pointer; margin-right: 0.5rem;" title="Marcar como pagada">
+                    ✅
+                </button>
+            `;
+        } else {
+            botonesAccion = `
+                <button onclick="reactivarDeuda(${deuda.id})" class="btn-icon" style="color: #FF9800; background: none; border: none; font-size: 1rem; cursor: pointer; margin-right: 0.5rem;" title="Reactivar deuda">
+                    🔄
+                </button>
+            `;
+        }
+        
+        let abonosHtml = '';
+        if (deuda.abonos && deuda.abonos.length > 0) {
+            abonosHtml = `
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                    <h5 style="margin-bottom: 0.5rem; font-size: 0.875rem; color: #666;">Abonos:</h5>
+                    ${deuda.abonos.map(abono => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; margin-bottom: 0.25rem;">
+                            <span>$${abono.monto.toLocaleString()} - ${new Date(abono.fecha_abono).toLocaleDateString()}</span>
+                            ${deuda.estado === 'pendiente' ? `
+                                <button onclick="eliminarAbono(${deuda.id}, ${abono.id})" style="color: #F44336; background: none; border: none; cursor: pointer;" title="Eliminar abono">
+                                    🗑️
+                                </button>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="lista-item ${estadoClass}" style="margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <div>
+                            <strong>${deuda.descripcion}</strong>
+                            <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
+                                ${deuda.persona}
+                            </div>
+                        </div>
+                        <span style="color: ${estadoColor}; font-size: 0.875rem; font-weight: 600;">
+                            ${estadoText}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <div>
+                            <div style="font-size: 0.875rem; color: #666;">
+                                Original: $${deuda.monto_original.toLocaleString()}
+                            </div>
+                            <div style="font-weight: 600; color: ${deuda.estado === 'pagada' ? '#4CAF50' : '#E91E63'};">
+                                Pendiente: $${deuda.monto_pendiente.toLocaleString()}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            ${botonesAccion}
+                            <button onclick="eliminarDeuda(${deuda.id})" class="btn-icon" style="color: #F44336; background: none; border: none; font-size: 1.5rem; cursor: pointer;" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    ${deuda.fecha_vencimiento ? `
+                        <div style="font-size: 0.875rem; color: #666;">
+                            Vence: ${new Date(deuda.fecha_vencimiento).toLocaleDateString()}
+                        </div>
+                    ` : ''}
+                    
+                    ${abonosHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = html;
+}
+
+function cambiarTabDeudas(tab) {
+    // Actualizar botones
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    // Mostrar contenido
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
+}
+
+async function crearDeuda(event) {
+    event.preventDefault();
+    
+    const data = {
+        tipo: document.getElementById('deuda-tipo').value,
+        descripcion: document.getElementById('deuda-descripcion').value,
+        persona: document.getElementById('deuda-persona').value,
+        monto: document.getElementById('deuda-monto').value,
+        fecha_vencimiento: document.getElementById('deuda-fecha-vencimiento').value || null
+    };
+    
+    try {
+        const response = await fetch('/deudas/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Deuda creada exitosamente');
+            cerrarModal('modal-crear-deuda');
+            document.getElementById('form-crear-deuda').reset();
+            cargarDeudas();
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo crear la deuda'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión al crear deuda');
+    }
+}
+
+function mostrarModalAbono(deudaId) {
+    document.getElementById('abono-deuda-id').value = deudaId;
+    mostrarModal('modal-agregar-abono-deuda');
+}
+
+async function agregarAbonoDeuda(event) {
+    event.preventDefault();
+    
+    const deudaId = document.getElementById('abono-deuda-id').value;
+    const data = {
+        monto: document.getElementById('abono-deuda-monto').value,
+        descripcion: document.getElementById('abono-deuda-descripcion').value
+    };
+    
+    try {
+        const response = await fetch(`/deudas/${deudaId}/abono`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Abono agregado exitosamente');
+            cerrarModal('modal-agregar-abono-deuda');
+            document.getElementById('form-agregar-abono-deuda').reset();
+            cargarDeudas();
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo agregar el abono'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión al agregar abono');
+    }
+}
+
+async function marcarDeudaPagada(deudaId) {
+    if (!confirm('¿Marcar esta deuda como pagada completamente?')) return;
+    
+    try {
+        const response = await fetch(`/deudas/${deudaId}/marcar-pagada`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Deuda marcada como pagada');
+            cargarDeudas();
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo marcar como pagada'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+async function reactivarDeuda(deudaId) {
+    if (!confirm('¿Reactivar esta deuda? Se deshará el último pago.')) return;
+    
+    try {
+        const response = await fetch(`/deudas/${deudaId}/reactivar`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Deuda reactivada exitosamente');
+            cargarDeudas();
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo reactivar la deuda'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+async function eliminarDeuda(deudaId) {
+    if (!confirm('¿Eliminar esta deuda permanentemente?')) return;
+    
+    try {
+        const response = await fetch(`/deudas/${deudaId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Deuda eliminada exitosamente');
+            cargarDeudas();
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo eliminar la deuda'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+async function eliminarAbono(deudaId, abonoId) {
+    if (!confirm('¿Eliminar este abono?')) return;
+    
+    try {
+        const response = await fetch(`/deudas/${deudaId}/abonos/${abonoId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Abono eliminado exitosamente');
+            cargarDeudas();
+        } else {
+            alert('❌ Error: ' + (result.error || 'No se pudo eliminar el abono'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+// ============================================
+// NAVEGACIÓN MEJORADA
+// ============================================
+
+// Historial de navegación
+let navigationHistory = [];
+
+function navegarA(seccion) {
+    // Guardar la sección actual en el historial
+    const seccionActual = document.querySelector('[id^="seccion-"]:not(.hidden)')?.id?.replace('seccion-', '');
+    if (seccionActual && seccionActual !== seccion) {
+        navigationHistory.push(seccionActual);
+    }
+    
+    mostrarSeccion(seccion);
+}
+
+function volverAtras() {
+    if (navigationHistory.length > 0) {
+        const seccionAnterior = navigationHistory.pop();
+        mostrarSeccion(seccionAnterior);
+    } else {
+        mostrarSeccion('menu');
+    }
+}
+
+// Función mejorada para manejar navegación con teclado
+document.addEventListener('keydown', function(event) {
+    // ESC para volver atrás
+    if (event.key === 'Escape') {
+        // Si hay un modal abierto, cerrarlo
+        const modalAbierto = document.querySelector('.modal.active');
+        if (modalAbierto) {
+            modalAbierto.classList.remove('active');
+            return;
+        }
+        
+        // Si no, volver a la sección anterior
+        volverAtras();
+    }
+});
+// ============================================
+// FUNCIÓN AUXILIAR PARA ACTUALIZAR ESTADÍSTICAS
+// ============================================
+
+async function actualizarEstadisticasFinancieras() {
+    /**
+     * Función que actualiza todas las estadísticas financieras
+     * Se debe llamar después de cualquier operación que afecte gastos, ahorros, etc.
+     */
+    try {
+        await cargarDisponibleMensual();
+        await cargarGastosDelMes();
+        await cargarSemaforo();
+    } catch (error) {
+        console.error('Error actualizando estadísticas financieras:', error);
     }
 }

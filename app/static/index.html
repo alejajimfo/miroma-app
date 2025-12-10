@@ -245,7 +245,7 @@
             <div id="menu-principal" class="hidden">
                 <!-- Menu Cards -->
                 <div class="plans-grid">
-                    <div id="menu-gastos-compartidos" class="menu-card" onclick="mostrarSeccion('gastos-compartidos')">
+                    <div id="menu-gastos-compartidos" class="menu-card" onclick="navegarA('gastos-compartidos')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #00C853 0%, #00E676 100%);">
                             📊
                         </div>
@@ -255,7 +255,7 @@
                         </div>
                     </div>
                     
-                    <div class="menu-card" onclick="mostrarSeccion('gastos-personales')">
+                    <div class="menu-card" onclick="navegarA('gastos-personales')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);">
                             💰
                         </div>
@@ -265,7 +265,7 @@
                         </div>
                     </div>
                     
-                    <div id="menu-ahorros" class="menu-card" onclick="mostrarSeccion('ahorros')">
+                    <div id="menu-ahorros" class="menu-card" onclick="navegarA('ahorros')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #FF9800 0%, #FFB300 100%);">
                             🐷
                         </div>
@@ -275,7 +275,7 @@
                         </div>
                     </div>
                     
-                    <div id="menu-pendientes" class="menu-card" onclick="mostrarSeccion('pendientes')">
+                    <div id="menu-pendientes" class="menu-card" onclick="navegarA('pendientes')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%);">
                             ✓
                         </div>
@@ -285,7 +285,7 @@
                         </div>
                     </div>
                     
-                    <div id="menu-planes" class="menu-card" onclick="mostrarSeccion('planes')">
+                    <div id="menu-planes" class="menu-card" onclick="navegarA('planes')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #5E72E4 0%, #825EE4 100%);">
                             🚀
                         </div>
@@ -295,7 +295,17 @@
                         </div>
                     </div>
                     
-                    <div class="menu-card" onclick="mostrarSeccion('configuracion')">
+                    <div class="menu-card" onclick="navegarA('deudas')">
+                        <div class="menu-card-icon" style="background: linear-gradient(135deg, #E91E63 0%, #F06292 100%);">
+                            💳
+                        </div>
+                        <div>
+                            <div class="menu-card-title" style="color: #E91E63;">Deudas</div>
+                            <div class="menu-card-description">Gestión de deudas</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-card" onclick="navegarA('configuracion')">
                         <div class="menu-card-icon" style="background: linear-gradient(135deg, #78909C 0%, #90A4AE 100%);">
                             ⚙️
                         </div>
@@ -328,7 +338,7 @@
                         </div>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                         <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                             💜 Resumen rápido
                         </h3>
@@ -356,7 +366,7 @@
             <!-- Secciones (Gastos, Ahorros, etc.) -->
             <div id="seccion-gastos-compartidos" class="hidden">
                 <div class="section-header">
-                    <button onclick="mostrarSeccion('menu')" class="btn-back">← </button>
+                    <button onclick="volverAtras()" class="btn-back" title="Volver (ESC)">←</button>
                     <div>
                         <h2 style="color: #00C853; margin-bottom: 0.25rem;">Nuestros gastos</h2>
                         <p style="color: #666; font-size: 0.875rem;">Sistema 70/30 automático</p>
@@ -407,7 +417,7 @@
 
             <div id="seccion-gastos-personales" class="hidden">
                 <div class="section-header">
-                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <button onclick="volverAtras()" class="btn-back" title="Volver (ESC)">←</button>
                     <div>
                         <h2 style="color: #FF69B4; margin-bottom: 0.25rem;">Gastos personales</h2>
                         <p style="color: #666; font-size: 0.875rem;">Solo tú puedes ver esto 🔒</p>
@@ -441,7 +451,7 @@
 
             <div id="seccion-ahorros" class="hidden">
                 <div class="section-header">
-                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <button onclick="volverAtras()" class="btn-back" title="Volver (ESC)">←</button>
                     <div>
                         <h2 style="color: #FF9800; margin-bottom: 0.25rem;">Ahorros</h2>
                         <p style="color: #666; font-size: 0.875rem;">Metas conjuntas para el futuro</p>
@@ -464,7 +474,7 @@
 
             <div id="seccion-pendientes" class="hidden">
                 <div class="section-header">
-                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <button onclick="volverAtras()" class="btn-back" title="Volver (ESC)">←</button>
                     <div>
                         <h2 style="color: #9C27B0; margin-bottom: 0.25rem;">Pendientes</h2>
                         <p style="color: #666; font-size: 0.875rem;">Para nuestra vida juntos ❤️</p>
@@ -499,7 +509,7 @@
 
             <div id="seccion-planes" class="hidden">
                 <div class="section-header">
-                    <button onclick="mostrarSeccion('menu')" class="btn-back">←</button>
+                    <button onclick="volverAtras()" class="btn-back" title="Volver (ESC)">←</button>
                     <div>
                         <h2 style="color: #5E72E4; margin-bottom: 0.25rem;">Planes a futuro</h2>
                         <p style="color: #666; font-size: 0.875rem;">Proyectos y sueños juntos 🚀</p>
@@ -516,7 +526,7 @@
 
             <!-- Sección Configuración -->
             <div id="seccion-configuracion" class="hidden">
-                <button onclick="mostrarSeccion('menu')" class="btn btn-ghost" style="width: auto; margin-bottom: 1.5rem;">
+                <button onclick="volverAtras()" class="btn btn-ghost" style="width: auto; margin-bottom: 1.5rem;" title="Volver (ESC)"></button>
                     ← Volver
                 </button>
                 
@@ -656,6 +666,64 @@
                         Eliminar mi cuenta
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Deudas -->
+    <div id="seccion-deudas" class="hidden">
+        <div class="section-header">
+            <button onclick="volverAtras()" class="btn-back" title="Volver (ESC)">←</button>
+            <div>
+                <h2 style="color: #E91E63; margin-bottom: 0.25rem;">Deudas</h2>
+                <p style="color: #666; font-size: 0.875rem;">Gestiona tus deudas y préstamos</p>
+            </div>
+            <button onclick="mostrarModal('modal-crear-deuda')" class="btn-add" style="background: linear-gradient(135deg, #E91E63 0%, #F06292 100%);">+ Nueva deuda</button>
+        </div>
+        
+        <!-- Resumen de Deudas -->
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                📊 Resumen de deudas
+            </h3>
+            <div class="summary-grid">
+                <div class="summary-item" style="background: #FFEBEE;">
+                    <p class="summary-label">Debo en total</p>
+                    <p class="summary-value" style="color: #E91E63;" id="total-debo">$0</p>
+                </div>
+                <div class="summary-item" style="background: #E8F5E9;">
+                    <p class="summary-label">Me deben</p>
+                    <p class="summary-value" style="color: #4CAF50;" id="total-me-deben">$0</p>
+                </div>
+                <div class="summary-item" style="background: #E3F2FD;">
+                    <p class="summary-label">Balance</p>
+                    <p class="summary-value" style="color: #2196F3;" id="balance-deudas">$0</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestañas -->
+        <div class="tabs" style="margin-bottom: 2rem;">
+            <button class="tab-button active" onclick="cambiarTabDeudas('debo')" id="tab-debo">
+                💳 Yo debo
+            </button>
+            <button class="tab-button" onclick="cambiarTabDeudas('me_deben')" id="tab-me-deben">
+                💰 Me deben
+            </button>
+        </div>
+        
+        <!-- Contenido de pestañas -->
+        <div id="tab-content-debo" class="tab-content">
+            <div class="card">
+                <h3 style="margin-bottom: 1.5rem; color: #E91E63;">💳 Deudas que tengo</h3>
+                <div id="lista-debo"></div>
+            </div>
+        </div>
+        
+        <div id="tab-content-me_deben" class="tab-content hidden">
+            <div class="card">
+                <h3 style="margin-bottom: 1.5rem; color: #4CAF50;">💰 Deudas que me deben</h3>
+                <div id="lista-me-deben"></div>
             </div>
         </div>
     </div>
@@ -822,6 +890,60 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Crear gasto</button>
                 <button type="button" onclick="cerrarModal('modal-crear-gasto-personal')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Deuda -->
+    <div id="modal-crear-deuda" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Nueva deuda</h3>
+            <form id="form-crear-deuda" onsubmit="crearDeuda(event)">
+                <div class="form-group">
+                    <label>Tipo de deuda</label>
+                    <select id="deuda-tipo" required>
+                        <option value="debo">💳 Yo debo</option>
+                        <option value="me_deben">💰 Me deben</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="deuda-descripcion" placeholder="Ej: Préstamo para carro" required>
+                </div>
+                <div class="form-group">
+                    <label>Persona</label>
+                    <input type="text" id="deuda-persona" placeholder="Ej: Juan Pérez" required>
+                </div>
+                <div class="form-group">
+                    <label>Monto</label>
+                    <input type="number" id="deuda-monto" placeholder="1000000" min="0" step="10000" required>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de vencimiento (opcional)</label>
+                    <input type="date" id="deuda-fecha-vencimiento">
+                </div>
+                <button type="submit" class="btn btn-primary">Crear deuda</button>
+                <button type="button" onclick="cerrarModal('modal-crear-deuda')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Abono -->
+    <div id="modal-agregar-abono-deuda" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Agregar abono</h3>
+            <form id="form-agregar-abono-deuda" onsubmit="agregarAbonoDeuda(event)">
+                <input type="hidden" id="abono-deuda-id">
+                <div class="form-group">
+                    <label>Monto del abono</label>
+                    <input type="number" id="abono-deuda-monto" placeholder="100000" min="0" step="10000" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción (opcional)</label>
+                    <input type="text" id="abono-deuda-descripcion" placeholder="Ej: Abono parcial">
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar abono</button>
+                <button type="button" onclick="cerrarModal('modal-agregar-abono-deuda')" class="btn btn-ghost" style="margin-top: 0.5rem;">Cancelar</button>
             </form>
         </div>
     </div>
