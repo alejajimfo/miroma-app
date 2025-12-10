@@ -22,6 +22,10 @@ class Usuario(UserMixin, db.Model):
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     activo = db.Column(db.Boolean, default=True)
     
+    # Campos para recuperación de contraseña
+    codigo_recuperacion = db.Column(db.String(10))
+    codigo_recuperacion_expira = db.Column(db.DateTime)
+    
     # Relaciones
     pareja = db.relationship('Pareja', back_populates='usuarios', foreign_keys=[pareja_id])
     gastos_personales = db.relationship('GastoPersonal', back_populates='usuario', lazy='dynamic')

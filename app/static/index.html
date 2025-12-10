@@ -68,6 +68,11 @@
                         <label>Contraseña</label>
                         <input type="password" id="login-password" placeholder="••••••••" required>
                     </div>
+                    
+                    <p style="text-align: right; margin-bottom: 1rem;">
+                        <a href="#" onclick="mostrarRecuperarPassword()" style="color: #FF69B4; font-size: 0.875rem;">¿Olvidaste tu contraseña?</a>
+                    </p>
+                    
                     <button type="submit" class="btn btn-primary">Iniciar sesión</button>
                 </form>
                 
@@ -121,6 +126,65 @@
             
             <button onclick="volverABienvenida()" class="btn btn-ghost" style="max-width: 500px; margin: 2rem auto 0; display: flex;">
                 ← Volver
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Recuperar Contraseña - Paso 1: Email -->
+    <div id="recuperar-password-screen" class="hidden">
+        <div class="container">
+            <div class="logo-circle" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);">
+                🔑
+            </div>
+            <h1 style="text-align: center; margin-bottom: 0.5rem;">Recuperar Contraseña</h1>
+            <p style="text-align: center; color: #666; margin-bottom: 3rem;">Ingresa tu correo para recibir un código</p>
+            
+            <div class="card" style="max-width: 500px; margin: 0 auto;">
+                <form id="recuperar-form">
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" id="recuperar-email" placeholder="tu@email.com" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enviar código</button>
+                </form>
+            </div>
+            
+            <button onclick="mostrarLogin()" class="btn btn-ghost" style="max-width: 500px; margin: 2rem auto 0; display: flex;">
+                ← Volver al login
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Recuperar Contraseña - Paso 2: Código -->
+    <div id="verificar-codigo-screen" class="hidden">
+        <div class="container">
+            <div class="logo-circle" style="background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);">
+                🔢
+            </div>
+            <h1 style="text-align: center; margin-bottom: 0.5rem;">Verificar Código</h1>
+            <p style="text-align: center; color: #666; margin-bottom: 3rem;">Ingresa el código de 6 dígitos</p>
+            
+            <div class="card" style="max-width: 500px; margin: 0 auto;">
+                <form id="verificar-codigo-form">
+                    <div class="form-group">
+                        <label>Código de verificación</label>
+                        <input type="text" id="codigo-verificacion" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required>
+                        <small style="color: #999; font-size: 0.875rem;">El código expira en 15 minutos</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva contraseña</label>
+                        <input type="password" id="nueva-password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Restablecer contraseña</button>
+                </form>
+                
+                <p style="text-align: center; margin-top: 1.5rem; color: #666;">
+                    <a href="#" onclick="reenviarCodigo()" style="color: #FF69B4; font-size: 0.875rem;">Reenviar código</a>
+                </p>
+            </div>
+            
+            <button onclick="mostrarLogin()" class="btn btn-ghost" style="max-width: 500px; margin: 2rem auto 0; display: flex;">
+                ← Volver al login
             </button>
         </div>
     </div>

@@ -330,3 +330,112 @@ def subir_foto():
         'mensaje': 'Foto actualizada exitosamente',
         'foto_url': foto_url
     }), 200
+
+@bp.route('/recuperar-password', methods=['POST'])
+def recuperar_password():
+    """Generar código de recuperación de contraseña"""
+    import random
+    import string
+    from datetime import datetime, timedelta
+    
+    data = request.get_json() if request.is_json else request.form
+    email = data.get('email', '').strip()
+    
+    if not email:
+        return jsonify({'error': 'Email requerido'}), 400
+    
+    usuario = Usuario.query.filter_by(email=email).first()
+    
+    if not usuario:
+        # Por seguridad, no revelar si el email existe o no
+        return jsonify({
+            'mensaje': 'Si el email existe, recibirás un código de recuperación'
+        }), 200
+    
+    # Generar código de 6 dígitos
+    codigo = ''.join(random.choices(string.digits, k=6))
+    
+    # Guardar código y expiración (15 minutos)
+    usuario.codigo_recuperacion = codigo
+    usuario.codigo_recuperacion_expira = datetime.utcnow() + timedelta(minutes=15)
+    db.session.commit()
+    
+    # En producción, aquí enviarías un email
+    # Por ahora, devolvemos el código (solo para desarrollo)
+    return jsonify({
+        'mensaje': 'Código de recuperación generado',
+        'codigo': codigo,  # REMOVER EN PRODUCCIÓN
+        'email': email
+    }), 200
+
+@bp.route('/verificar-codigo-recuperacion', methods=['POST'])
+def verificar_codigo_recuperacion():
+    """Verificar código de recuperación"""
+    from datetime import datetime
+    
+    data = request.get_json() if request.is_json else request.form
+    email = data.get('email', '').strip()
+    codigo = data.get('codigo', '').strip()
+    
+    if not email or not codigo:
+        return jsonify({'error': 'Email y código requeridos'}), 400
+    
+    usuario = Usuario.query.filter_by(email=email).first()
+    
+    if not usuario:
+        return jsonify({'error': 'Código inválido o expirado'}), 400
+    
+    # Verificar código y expiración
+    if usuario.codigo_recuperacion != codigo:
+        return jsonify({'error': 'Código inválido'}), 400
+    
+    if not usuario.codigo_recuperacion_expira or usuario.codigo_recuperacion_expira < datetime.utcnow():
+        return jsonify({'error': 'Código expirado'}), 400
+    
+    return jsonify({
+        'mensaje': 'Código verificado correctamente',
+        'email': email
+    }), 200
+
+@bp.route('/restablecer-password', methods=['POST'])
+def restablecer_password():
+    """Restablecer contraseña con código de recuperación"""
+    from datetime import datetime
+    
+    data = request.get_json() if request.is_json else request.form
+    email = data.get('email', '').strip()
+    codigo = data.get('codigo', '').strip()
+    password_nueva = data.get('password_nueva', '')
+    
+    if not email or not codigo or not password_nueva:
+        return jsonify({'error': 'Todos los campos son requeridos'}), 400
+    
+    usuario = Usuario.query.filter_by(email=email).first()
+    
+    if not usuario:
+        return jsonify({'error': 'Código inválido o expirado'}), 400
+    
+    # Verificar código y expiración
+    if usuario.codigo_recuperacion != codigo:
+        return jsonify({'error': 'Código inválido'}), 400
+    
+    if not usuario.codigo_recuperacion_expira or usuario.codigo_recuperacion_expira < datetime.utcnow():
+        return jsonify({'error': 'Código expirado'}), 400
+    
+    # Validar nueva contraseña
+    valido, mensaje = validar_password(password_nueva)
+    if not valido:
+        return jsonify({'error': mensaje}), 400
+    
+    # Actualizar contraseña
+    usuario.set_password(password_nueva)
+    
+    # Limpiar código de recuperación
+    usuario.codigo_recuperacion = None
+    usuario.codigo_recuperacion_expira = None
+    
+    db.session.commit()
+    
+    return jsonify({
+        'mensaje': 'Contraseña restablecida exitosamente'
+    }), 200

@@ -44,6 +44,11 @@ function volverABienvenida() {
     selectedRole = null;
 }
 
+function mostrarRecuperarPassword() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('recuperar-password-screen').classList.remove('hidden');
+}
+
 function setupEventListeners() {
     // Login
     document.getElementById('login-form')?.addEventListener('submit', handleLogin);
@@ -60,6 +65,10 @@ function setupEventListeners() {
     
     // Crear gasto compartido
     document.getElementById('form-crear-gasto')?.addEventListener('submit', crearGastoCompartido);
+    
+    // Recuperar contraseña
+    document.getElementById('recuperar-form')?.addEventListener('submit', handleRecuperarPassword);
+    document.getElementById('verificar-codigo-form')?.addEventListener('submit', handleVerificarCodigo);
 }
 
 async function handleLogin(e) {
@@ -891,5 +900,116 @@ async function crearGastoPersonal(event) {
     } catch (error) {
         console.error('Error:', error);
         alert('Error al crear gasto');
+    }
+}
+
+// ============================================
+// RECUPERACIÓN DE CONTRASEÑA
+// ============================================
+
+let emailRecuperacion = '';
+
+async function handleRecuperarPassword(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('recuperar-email').value;
+    emailRecuperacion = email;
+    
+    try {
+        const response = await fetch('/auth/recuperar-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Mostrar código en consola (solo para desarrollo)
+            if (data.codigo) {
+                console.log('🔑 Código de recuperación:', data.codigo);
+                alert(`Código generado: ${data.codigo}\n(En producción se enviará por email)`);
+            }
+            
+            // Ir a pantalla de verificación
+            document.getElementById('recuperar-password-screen').classList.add('hidden');
+            document.getElementById('verificar-codigo-screen').classList.remove('hidden');
+        } else {
+            alert(data.error || 'Error al generar código');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+}
+
+async function handleVerificarCodigo(e) {
+    e.preventDefault();
+    
+    const codigo = document.getElementById('codigo-verificacion').value;
+    const passwordNueva = document.getElementById('nueva-password').value;
+    
+    try {
+        const response = await fetch('/auth/restablecer-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: emailRecuperacion,
+                codigo: codigo,
+                password_nueva: passwordNueva
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Contraseña restablecida exitosamente');
+            
+            // Limpiar formularios
+            document.getElementById('verificar-codigo-form').reset();
+            document.getElementById('recuperar-form').reset();
+            
+            // Volver al login
+            document.getElementById('verificar-codigo-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            
+            emailRecuperacion = '';
+        } else {
+            alert(data.error || 'Error al restablecer contraseña');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+}
+
+async function reenviarCodigo() {
+    if (!emailRecuperacion) {
+        alert('Error: No hay email registrado');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/auth/recuperar-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailRecuperacion })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            if (data.codigo) {
+                console.log('🔑 Nuevo código:', data.codigo);
+                alert(`Nuevo código: ${data.codigo}\n(En producción se enviará por email)`);
+            } else {
+                alert('Código reenviado exitosamente');
+            }
+        } else {
+            alert(data.error || 'Error al reenviar código');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
     }
 }

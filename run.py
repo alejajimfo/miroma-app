@@ -23,70 +23,9 @@ def make_shell_context():
 
 @app.route('/')
 def index():
-    """Ruta principal"""
-    return '''
-    <html>
-        <head>
-            <title>Miroma - App para Parejas</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    background-color: #F7E7CE;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    margin: 0;
-                }
-                .container {
-                    text-align: center;
-                    background: white;
-                    padding: 40px;
-                    border-radius: 20px;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                }
-                h1 {
-                    color: #4CAF50;
-                    margin-bottom: 20px;
-                }
-                .emoji {
-                    font-size: 60px;
-                    margin-bottom: 20px;
-                }
-                a {
-                    display: inline-block;
-                    margin: 10px;
-                    padding: 15px 30px;
-                    background-color: #4CAF50;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 10px;
-                    transition: background-color 0.3s;
-                }
-                a:hover {
-                    background-color: #45a049;
-                }
-                .api-link {
-                    background-color: #4A90E2;
-                }
-                .api-link:hover {
-                    background-color: #357ABD;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="emoji">💑</div>
-                <h1>Bienvenidos a Miroma</h1>
-                <p>La app para organizar su vida juntos</p>
-                <div>
-                    <a href="/static/index.html">Ir a la App</a>
-                    <a href="/api/docs" class="api-link">Ver API</a>
-                </div>
-            </div>
-        </body>
-    </html>
-    '''
+    """Ruta principal - redirige directamente a la app"""
+    from flask import redirect
+    return redirect('/static/index.html')
 
 @app.route('/api/docs')
 def api_docs():
